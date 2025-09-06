@@ -1,0 +1,192 @@
+/** @import must precede all other statements */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 232 24% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 232 24% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 232 24% 12%;
+
+    /* Brand: Royal purple with pink accent */
+    --primary: 266 72% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 197 93% 44%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 17% 97%;
+    --muted-foreground: 232 10% 42%;
+
+    --accent: 330 81% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 230 14% 88%;
+    --input: 230 14% 88%;
+    --ring: 266 72% 50%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 232 24% 12%;
+    --sidebar-primary: 266 72% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 17% 97%;
+    --sidebar-accent-foreground: 232 24% 12%;
+    --sidebar-border: 230 14% 88%;
+    --sidebar-ring: 266 72% 50%;
+  }
+
+  /* Salon Theme - Based on the logo colors (cyan/blue with white) */
+  [data-theme="salon"] {
+    --background: 0 0% 100%;
+    --foreground: 200 100% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 200 100% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 100% 20%;
+
+    /* Brand: Cyan/Blue theme inspired by logo */
+    --primary: 195 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 200 100% 40%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 195 20% 95%;
+    --muted-foreground: 200 50% 30%;
+
+    --accent: 200 100% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 195 30% 85%;
+    --input: 195 30% 85%;
+    --ring: 195 100% 50%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 200 100% 20%;
+    --sidebar-primary: 195 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 195 20% 95%;
+    --sidebar-accent-foreground: 200 100% 20%;
+    --sidebar-border: 195 30% 85%;
+    --sidebar-ring: 195 100% 50%;
+  }
+
+  .dark {
+    --background: 240 18% 8%;
+    --foreground: 0 0% 100%;
+
+    --card: 240 18% 10%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 240 18% 10%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 267 78% 66%;
+    --primary-foreground: 255 100% 97%;
+
+    --secondary: 197 93% 44%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 18% 16%;
+    --muted-foreground: 240 6% 75%;
+
+    --accent: 330 81% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 18% 20%;
+    --input: 240 18% 20%;
+    --ring: 267 78% 66%;
+    --sidebar-background: 240 18% 8%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 267 78% 66%;
+    --sidebar-primary-foreground: 255 100% 97%;
+    --sidebar-accent: 240 18% 12%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 18% 20%;
+    --sidebar-ring: 267 78% 66%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Remove unwanted click effects */
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow text selection for content areas */
+  p, span, div, h1, h2, h3, h4, h5, h6 {
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+}
+
+@layer components {
+  /* Salon theme specific styles */
+  [data-theme="salon"] .gradient-hero {
+    background: linear-gradient(135deg, 
+      hsl(195, 100%, 95%) 0%, 
+      hsl(200, 100%, 90%) 25%, 
+      hsl(195, 100%, 85%) 50%, 
+      hsl(200, 100%, 90%) 75%, 
+      hsl(195, 100%, 95%) 100%);
+  }
+
+  [data-theme="salon"] .glass {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(195, 100%, 50%, 0.1);
+  }
+
+  [data-theme="salon"] .floating-label input:focus + label,
+  [data-theme="salon"] .floating-label input:not(:placeholder-shown) + label {
+    color: hsl(195, 100%, 50%);
+  }
+
+  [data-theme="salon"] .floating-label input:focus {
+    border-color: hsl(195, 100%, 50%);
+    box-shadow: 0 0 0 3px rgba(195, 100%, 50%, 0.1);
+  }
+}

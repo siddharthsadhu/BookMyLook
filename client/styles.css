@@ -1,0 +1,40 @@
+/* Gradient backgrounds */
+.gradient-hero {
+  background-image: radial-gradient(1200px 600px at 10% -10%, hsl(var(--accent) / 0.25), transparent 50%),
+    radial-gradient(800px 400px at 90% -20%, hsl(var(--secondary) / 0.2), transparent 50%),
+    linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background)) 60%, hsl(var(--muted)) 100%);
+}
+
+.glass {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: hsl(var(--card) / 0.6);
+  border: 1px solid hsl(var(--border));
+}
+
+/* Floating labels */
+.floating-label {
+  position: relative;
+}
+.floating-label input,
+.floating-label textarea,
+.floating-label select {
+  padding-top: 1.25rem;
+}
+.floating-label label {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  transition: all 0.15s ease;
+  pointer-events: none;
+}
+.floating-label:has(input:focus),
+.floating-label:has(textarea:focus),
+.floating-label:has(select:focus) label,
+.floating-label:has(input:not(:placeholder-shown)) label,
+.floating-label:has(textarea:not(:placeholder-shown)) label,
+.floating-label:has(select:not([value=""])) label {
+  transform: translateY(-0.6rem) scale(0.85);
+  color: hsl(var(--primary));
+}
