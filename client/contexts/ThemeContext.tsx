@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'default' | 'salon';
+type Theme = 'default' | 'dark';
 
 interface ThemeContextType {
   theme: Theme;
@@ -39,7 +39,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'default' ? 'salon' : 'default');
+    setTheme(prev => prev === 'default' ? 'dark' : 'default');
   };
 
   return (

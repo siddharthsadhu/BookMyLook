@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Clock, Users, DollarSign, Star, TrendingUp, Calendar, Phone, Mail, MapPin, Plus } from "lucide-react";
+import { Clock, Users, DollarSign, Star, TrendingUp, Calendar, Phone, Mail, MapPin, Plus, CheckCircle, UserCheck } from "lucide-react";
+import { useQueue } from "@/contexts/QueueContext";
+import { QueueEntry } from "@shared/api";
 
 interface QueueItem {
   customer_id: number;
@@ -38,10 +40,44 @@ interface Staff {
 
 export default function OwnerDashboard() {
   const { t } = useI18n();
-  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const { getQueueForSalon, updateQueueEntry, refreshQueue } = useQueue();
   const [services, setServices] = useState<Service[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentSalonId, setCurrentSalonId] = useState('salon_gentleman_zone'); // Default to Gentlemen's Zone
+  const [queueStats, setQueueStats] = useState({
+    waiting: 0,
+    inService: 0,
+    completed: 0,
+    averageWaitTime: 0
+  });
+
+  // Update queue stats whenever queue changes
+  useEffect(() => {
+    const queue = getQueueForSalon(currentSalonId);
+    const waiting = queue.filter(entry => entry.status === 'WAITING').length;
+    const inService = queue.filter(entry => entry.status === 'IN_SERVICE').length;
+    const completed = queue.filter(entry => entry.status === 'COMPLETED').length;
+    const avgWaitTime = queue.length > 0 ? Math.round(queue.reduce((sum, entry) => sum + entry.estimatedWaitMinutes, 0) / queue.length) : 0;
+
+    setQueueStats({
+      waiting,
+      inService,
+      completed,
+      averageWaitTime: avgWaitTime
+    });
+  }, [getQueueForSalon(currentSalonId), currentSalonId]);
+
+  // Real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // This will trigger the useEffect above to recalculate stats
+      refreshQueue(currentSalonId);
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [currentSalonId, refreshQueue]);
+
   const [stats, setStats] = useState({
     totalCustomers: 0,
     todayRevenue: 0,
@@ -50,44 +86,31 @@ export default function OwnerDashboard() {
   });
 
   useEffect(() => {
-    // Simulate loading salon data
+    // Simulate loading salon data (services and staff)
     setTimeout(() => {
-      setQueue([
-        {
-          customer_id: 1,
-          customer_name: "John Doe",
-          service_name: "Men's Haircut",
-          queue_position: 1,
-          estimated_wait: 0,
-          appointment_time: "14:30",
-          phone: "+91 98765 43210"
-        },
-        {
-          customer_id: 2,
-          customer_name: "Jane Smith",
-          service_name: "Beard Trim",
-          queue_position: 2,
-          estimated_wait: 30,
-          appointment_time: "15:00",
-          phone: "+91 98765 43211"
-        }
-      ]);
-
       setServices([
         {
           service_id: 1,
-          service_name: "Men's Haircut",
-          description: "A standard haircut and style",
-          duration_minutes: 30,
-          price: 25,
+          service_name: "Hair Cut & Styling",
+          description: "Professional haircut with modern styling techniques",
+          duration_minutes: 45,
+          price: 350,
           is_active: true
         },
         {
           service_id: 2,
-          service_name: "Beard Trim",
-          description: "Professional beard trimming and styling",
+          service_name: "Beard Grooming",
+          description: "Complete beard trim, shape and styling",
+          duration_minutes: 30,
+          price: 200,
+          is_active: true
+        },
+        {
+          service_id: 3,
+          service_name: "Hair Wash",
+          description: "Deep conditioning hair wash with premium products",
           duration_minutes: 20,
-          price: 15,
+          price: 150,
           is_active: true
         }
       ]);
@@ -95,28 +118,44 @@ export default function OwnerDashboard() {
       setStaff([
         {
           barber_id: 1,
-          first_name: "Jane",
-          last_name: "Smith",
-          email: "jane.smith@example.com",
-          phone_number: "555-123-4567",
+          first_name: "Rajesh",
+          last_name: "Kumar",
+          email: "rajesh.kumar@gentlemenszone.com",
+          phone_number: "+91 98765 43210",
+          is_available: true
+        },
+        {
+          barber_id: 2,
+          first_name: "Amit",
+          last_name: "Sharma",
+          email: "amit.sharma@gentlemenszone.com",
+          phone_number: "+91 98765 43211",
           is_available: true
         }
       ]);
 
       setStats({
         totalCustomers: 156,
-        todayRevenue: 450,
+        todayRevenue: 18500, // More realistic for Indian salon (₹18,500)
         averageRating: 4.8,
-        activeServices: 2
+        activeServices: 3
       });
 
       setLoading(false);
     }, 1000);
   }, []);
 
-  const handleNextCustomer = (customerId: number) => {
-    // Move customer to next position or mark as completed
-    setQueue(prev => prev.filter(item => item.customer_id !== customerId));
+  const handleNextCustomer = async (entryId: string) => {
+    const queueEntry = getQueueForSalon(currentSalonId).find(entry => entry.id === entryId);
+    if (!queueEntry) return;
+
+    if (queueEntry.status === 'WAITING') {
+      // Move to IN_SERVICE
+      await updateQueueEntry(currentSalonId, entryId, { status: 'IN_SERVICE' });
+    } else if (queueEntry.status === 'IN_SERVICE') {
+      // Mark as COMPLETED
+      await updateQueueEntry(currentSalonId, entryId, { status: 'COMPLETED' });
+    }
   };
 
   const handleAddToQueue = () => {
@@ -138,8 +177,8 @@ export default function OwnerDashboard() {
   return (
     <div className="container py-16">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Salon Owner Dashboard</h1>
-        <p className="text-muted-foreground">Manage your salon operations and customer queue</p>
+        <h1 className="text-3xl font-bold mb-2">"The Gentlemen's Zone" Dashboard</h1>
+        <p className="text-muted-foreground">Manage your premium men's salon operations and customer queue</p>
       </div>
 
       {/* Stats Overview */}
@@ -171,10 +210,10 @@ export default function OwnerDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Today's Revenue</p>
-                  <p className="text-2xl font-bold">₹{stats.todayRevenue}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Waiting in Queue</p>
+                  <p className="text-2xl font-bold">{queueStats.waiting}</p>
                 </div>
-                <DollarSign className="h-8 w-8 text-green-600" />
+                <Users className="h-8 w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
@@ -189,10 +228,10 @@ export default function OwnerDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Average Rating</p>
-                  <p className="text-2xl font-bold">{stats.averageRating}</p>
+                  <p className="text-sm font-medium text-muted-foreground">In Service</p>
+                  <p className="text-2xl font-bold">{queueStats.inService}</p>
                 </div>
-                <Star className="h-8 w-8 text-yellow-500" />
+                <UserCheck className="h-8 w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
@@ -207,10 +246,10 @@ export default function OwnerDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Services</p>
-                  <p className="text-2xl font-bold">{stats.activeServices}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Avg Wait Time</p>
+                  <p className="text-2xl font-bold">{queueStats.averageWaitTime} min</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-blue-600" />
+                <Clock className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -235,9 +274,9 @@ export default function OwnerDashboard() {
           </div>
 
           <div className="grid gap-4">
-            {queue.map((item, index) => (
+            {getQueueForSalon(currentSalonId).map((item, index) => (
               <motion.div
-                key={item.customer_id}
+                key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -247,35 +286,56 @@ export default function OwnerDashboard() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center justify-center w-12 h-12 bg-primary text-primary-foreground rounded-full font-bold text-lg">
-                          {item.queue_position}
+                          {item.position}
                         </div>
                         <div>
-                          <h3 className="font-semibold text-lg">{item.customer_name}</h3>
-                          <p className="text-sm text-muted-foreground">{item.service_name}</p>
+                          <h3 className="font-semibold text-lg">{item.customerName}</h3>
+                          <p className="text-sm text-muted-foreground">{item.serviceName}</p>
                           <div className="flex items-center gap-4 mt-1">
                             <span className="text-sm flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {item.appointment_time}
+                              {item.estimatedTime}
                             </span>
                             <span className="text-sm flex items-center gap-1">
                               <Phone className="h-3 w-3" />
-                              {item.phone}
+                              {item.customerPhone}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        {item.estimated_wait > 0 && (
+                        {item.status === 'WAITING' && (
                           <Badge variant="secondary">
-                            Wait: {item.estimated_wait} min
+                            Wait: {item.estimatedWaitMinutes} min
                           </Badge>
                         )}
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleNextCustomer(item.customer_id)}
-                        >
-                          Next
-                        </Button>
+                        {item.status === 'IN_SERVICE' && (
+                          <Badge variant="default">
+                            In Service
+                          </Badge>
+                        )}
+                        {item.status === 'COMPLETED' && (
+                          <Badge variant="outline">
+                            Completed
+                          </Badge>
+                        )}
+                        {item.status === 'WAITING' && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleNextCustomer(item.id)}
+                          >
+                            Next
+                          </Button>
+                        )}
+                        {item.status === 'IN_SERVICE' && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleNextCustomer(item.id)}
+                          >
+                            Complete
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -283,7 +343,7 @@ export default function OwnerDashboard() {
               </motion.div>
             ))}
 
-            {queue.length === 0 && (
+            {getQueueForSalon(currentSalonId).length === 0 && (
               <Card>
                 <CardContent className="text-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

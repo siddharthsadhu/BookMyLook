@@ -49,25 +49,25 @@ export default function About() {
 
   const team = [
     {
-      name: "Alex Johnson",
+      name: "Sadhu Siddharth",
       role: "CEO & Founder",
       description: "Passionate about revolutionizing the salon industry with technology.",
       image: "👨‍💼"
     },
     {
-      name: "Sarah Chen",
+      name: "Shah Nirmam",
       role: "CTO",
       description: "Full-stack developer with expertise in real-time systems and user experience.",
       image: "👩‍💻"
     },
     {
-      name: "Mike Rodriguez",
+      name: "Harshil Siddhapura",
       role: "Head of Operations",
       description: "Operations expert ensuring smooth salon partnerships and customer satisfaction.",
       image: "👨‍💼"
     },
     {
-      name: "Emily Davis",
+      name: "Dhruvil Jadavs",
       role: "UX Designer",
       description: "Creating beautiful and intuitive experiences for all our users.",
       image: "👩‍🎨"

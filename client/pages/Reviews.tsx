@@ -305,9 +305,13 @@ export default function Reviews() {
                                 )}
                               </div>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <span>{review.salon_name}</span>
-                                <span>•</span>
-                                <span>{review.service_name}</span>
+                                <span>{review.salon?.name || 'Unknown Salon'}</span>
+                                {review.booking?.service && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{review.booking.service.name}</span>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -316,7 +320,7 @@ export default function Reviews() {
                               {renderStars(review.rating)}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {new Date(review.review_date).toLocaleDateString()}
+                              {new Date(review.createdAt).toLocaleDateString()}
                             </div>
                           </div>
                         </div>

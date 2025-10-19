@@ -33,24 +33,31 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      // Here you would typically send the contact form data to your API
-      console.log('Contact form data:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Show success message
-      alert('Message sent successfully! We\'ll get back to you within 24 hours.');
-      
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
-        inquiry_type: ''
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(data.message || 'Message sent successfully! We\'ll get back to you within 24 hours.');
+        
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+          inquiry_type: ''
+        });
+      } else {
+        alert(`Failed to send message: ${data.error}`);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       alert('Failed to send message. Please try again.');

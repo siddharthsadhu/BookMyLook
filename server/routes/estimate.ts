@@ -1,73 +1,132 @@
 import { RequestHandler } from "express";
+import { ApiResponse } from "@shared/api";
 
 interface EstimateRequest {
-  shop_id: number;
-  service_id: number;
-  queue_length?: number;
-  service_time?: number;
+  salonId: string;
+  serviceId: string;
 }
 
 interface EstimateResponse {
-  shop_name: string;
-  queue_length: number;
-  service_duration: number;
-  estimated_wait_time: number;
-  estimated_wait_minutes: number;
-  wait_status: string;
+  salon: {
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+  };
+  service: {
+    id: string;
+    name: string;
+    durationMinutes: number;
+    price: number;
+  };
+  queue: {
+    currentLength: number;
+    averageWaitTime: number;
+    estimatedWaitTime: number;
+  };
   recommendation: string;
-  is_long_wait: boolean;
+  isLongWait: boolean;
+  urgency: 'low' | 'medium' | 'high';
 }
 
-// Mock data for demonstration
-const mockShops = {
-  1: "Style Studio",
-  2: "Beauty Lounge", 
-  3: "Hair & Beyond"
-};
-
-const mockServiceDurations = {
-  1: 45, 2: 30, 3: 120, 4: 60, 5: 90, 6: 75, 7: 60, 8: 45, 9: 180
-};
-
-export const handleEstimate: RequestHandler = (req, res) => {
+export const handleEstimate: RequestHandler = async (req, res) => {
   try {
-    const { shop_id, service_id, queue_length, service_time } = req.body as EstimateRequest;
-    
-    if (!shop_id || !service_id) {
-      return res.status(400).json({
+    const { salonId, serviceId } = req.body as EstimateRequest;
+
+    if (!salonId || !serviceId) {
+      const response: ApiResponse = {
         success: false,
-        error: "Shop ID and Service ID are required"
-      });
+        error: "Salon ID and Service ID are required"
+      };
+      return res.status(400).json(response);
     }
 
-    // Mock queue length (in production, this would come from database)
-    const currentQueueLength = queue_length || Math.floor(Math.random() * 10) + 1;
-    const serviceDuration = service_time || mockServiceDurations[service_id as keyof typeof mockServiceDurations] || 30;
-    
-    const estimatedWait = currentQueueLength * serviceDuration;
-    const isLongWait = estimatedWait > 30;
-    const waitStatus = isLongWait ? "Long Wait" : "Short Wait";
-    const recommendation = estimatedWait > 45 ? "Extra Counter Recommended" : "Current Counters Sufficient";
-
-    const response: EstimateResponse = {
-      shop_name: mockShops[shop_id as keyof typeof mockShops] || "Unknown Shop",
-      queue_length: currentQueueLength,
-      service_duration: serviceDuration,
-      estimated_wait_time: estimatedWait,
-      estimated_wait_minutes: estimatedWait,
-      wait_status: waitStatus,
-      recommendation: recommendation,
-      is_long_wait: isLongWait
+    // Mock data
+    const mockSalons = {
+      '1': {
+        id: '1',
+        name: 'StyleMaster Salon',
+        address: '123 MG Road, Bangalore',
+        phone: '+91 9876543210'
+      },
+      '2': {
+        id: '2',
+        name: 'Beauty Bliss',
+        address: '456 Brigade Road, Bangalore',
+        phone: '+91 9876543211'
+      }
     };
 
-    res.json({
+    const mockServices = {
+      's1': { id: 's1', name: 'Hair Cut', durationMinutes: 45, price: 300 },
+      's2': { id: 's2', name: 'Beard Styling', durationMinutes: 30, price: 150 },
+      's3': { id: 's3', name: 'Facial', durationMinutes: 60, price: 500 }
+    };
+
+    const salon = mockSalons[salonId as keyof typeof mockSalons];
+    const service = mockServices[serviceId as keyof typeof mockServices];
+
+    if (!salon) {
+      const response: ApiResponse = {
+        success: false,
+        error: "Salon not found"
+      };
+      return res.status(404).json(response);
+    }
+
+    if (!service) {
+      const response: ApiResponse = {
+        success: false,
+        error: "Service not found"
+      };
+      return res.status(404).json(response);
+    }
+
+    // Mock queue data
+    const currentQueueLength = Math.floor(Math.random() * 5); // 0-4 people
+    const averageWaitTime = 15;
+    const estimatedWaitTime = currentQueueLength * (service.durationMinutes + 5);
+
+    // Determine urgency and recommendation
+    let urgency: 'low' | 'medium' | 'high' = 'low';
+    let recommendation = "Perfect time to book!";
+
+    if (estimatedWaitTime > 60) {
+      urgency = 'high';
+      recommendation = "Consider booking for later or try another salon. Long wait expected.";
+    } else if (estimatedWaitTime > 30) {
+      urgency = 'medium';
+      recommendation = "Moderate wait time. Consider booking online to skip the line.";
+    } else if (estimatedWaitTime > 15) {
+      urgency = 'low';
+      recommendation = "Short wait expected. Good time to visit!";
+    }
+
+    const isLongWait = estimatedWaitTime > 30;
+
+    const response: ApiResponse<EstimateResponse> = {
       success: true,
-      data: response
-    });
+      data: {
+        salon,
+        service,
+        queue: {
+          currentLength: currentQueueLength,
+          averageWaitTime,
+          estimatedWaitTime,
+        },
+        recommendation,
+        isLongWait,
+        urgency,
+      }
+    };
+
+    res.json(response);
   } catch (error) {
-    res.status(500).json({
+    console.error('Error getting estimate:', error);
+    const response: ApiResponse = {
       success: false,
       error: "Failed to get estimate"
-    });
+    };
+    res.status(500).json(response);
   }
 };

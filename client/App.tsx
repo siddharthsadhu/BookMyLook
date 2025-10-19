@@ -9,8 +9,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { I18nProvider } from "@/i18n";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { QueueProvider } from "@/contexts/QueueContext";
 import { AnimatePresence, motion } from "framer-motion";
 import SiteLayout from "./layouts/SiteLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Services from "./pages/Services";
 import Booking from "./pages/Booking";
@@ -20,12 +23,13 @@ import CustomerDashboard from "./pages/CustomerDashboard";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
-import ForgotPassword from "./pages/ForgotPassword";
+import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Reviews from "./pages/Reviews";
 import Help from "./pages/Help";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import Estimate from "./pages/Estimate";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,16 +49,41 @@ function RouterWithTransitions(){
         <Route path="/help" element={<SiteLayout><Page><Help /></Page></SiteLayout>} />
         <Route path="/terms" element={<SiteLayout><Page><Terms /></Page></SiteLayout>} />
         <Route path="/privacy" element={<SiteLayout><Page><Privacy /></Page></SiteLayout>} />
+        <Route path="/estimate" element={<SiteLayout><Page><Estimate /></Page></SiteLayout>} />
         
         {/* Authentication Pages */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/login" element={
+          <ProtectedRoute requireAuth={false}>
+            <Login />
+          </ProtectedRoute>
+        } />
+        <Route path="/register" element={
+          <ProtectedRoute requireAuth={false}>
+            <Register />
+          </ProtectedRoute>
+        } />
         
         {/* Dashboard Pages */}
-        <Route path="/dashboard/customer" element={<SiteLayout><Page><CustomerDashboard /></Page></SiteLayout>} />
-        <Route path="/dashboard/owner" element={<SiteLayout><Page><OwnerDashboard /></Page></SiteLayout>} />
-        <Route path="/dashboard/admin" element={<SiteLayout><Page><AdminDashboard /></Page></SiteLayout>} />
-        <Route path="/profile" element={<SiteLayout><Page><Profile /></Page></SiteLayout>} />
+        <Route path="/dashboard/customer" element={
+          <ProtectedRoute allowedRoles={['CUSTOMER']}>
+            <SiteLayout><Page><CustomerDashboard /></Page></SiteLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/owner" element={
+          <ProtectedRoute allowedRoles={['SALON_OWNER']}>
+            <SiteLayout><Page><OwnerDashboard /></Page></SiteLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/admin" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <SiteLayout><Page><AdminDashboard /></Page></SiteLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <SiteLayout><Page><Profile /></Page></SiteLayout>
+          </ProtectedRoute>
+        } />
         
         {/* 404 Page */}
         <Route path="*" element={<SiteLayout><NotFound /></SiteLayout>} />
@@ -74,17 +103,24 @@ function Page({ children }: {children: React.ReactNode}){
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <I18nProvider>
-          <BrowserRouter>
-            <RouterWithTransitions />
-          </BrowserRouter>
-        </I18nProvider>
-      </TooltipProvider>
+      <QueueProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <I18nProvider>
+              <BrowserRouter future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}>
+                <RouterWithTransitions />
+              </BrowserRouter>
+            </I18nProvider>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueueProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
 
-createRoot(document.getElementById("root")!).render(<App />);
+export default App;

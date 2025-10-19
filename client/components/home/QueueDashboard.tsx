@@ -1,69 +1,71 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useI18n } from "@/i18n";
+import { useNavigate } from "react-router-dom";
+import { useQueue } from "@/contexts/QueueContext";
 
-interface QueueData {
-  queue_id: number;
-  customer_id: number;
-  shop_id: number;
-  service_id: number;
-  queue_position: number;
-  status: string;
-  estimated_wait_time: number;
-  queue_time: string;
-  first_name: string;
-  last_name: string;
-  service_name: string;
-}
+// Utility functions for queue status
+const getQueueStatusColor = (status: string) => {
+  switch (status) {
+    case 'WAITING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'CALLED': return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'IN_SERVICE': return 'bg-purple-100 text-purple-800 border-purple-200';
+    case 'COMPLETED': return 'bg-green-100 text-green-800 border-green-200';
+    case 'NO_SHOW': return 'bg-red-100 text-red-800 border-red-200';
+    default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
+const getQueueStatusText = (status: string) => {
+  switch (status) {
+    case 'WAITING': return 'Waiting';
+    case 'CALLED': return 'Called';
+    case 'IN_SERVICE': return 'In Service';
+    case 'COMPLETED': return 'Completed';
+    case 'NO_SHOW': return 'No Show';
+    default: return status;
+  }
+};
+
+const formatEstimatedTime = (estimatedTime: string) => {
+  // The estimatedTime is already a formatted time string like "2:30 PM"
+  // Just return it as-is for display
+  return estimatedTime;
+};
 
 export default function QueueDashboard() {
   const { t } = useI18n();
-  const [queueData, setQueueData] = useState<QueueData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { getQueueForSalon, getQueueStats } = useQueue();
 
-  useEffect(() => {
-    fetchQueueData();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchQueueData, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  // Get queue data for both salons
+  const salon1Id = 'salon_gentleman_zone';
+  const salon2Id = 'salon_style_studio';
 
-  const fetchQueueData = async () => {
-    try {
-      // For demo purposes, we'll use shop_id = 1
-      const response = await fetch('/api/queue?shop_id=1');
-      const data = await response.json();
-      if (data.success) {
-        setQueueData(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching queue data:', error);
-    } finally {
-      setLoading(false);
+  const salon1Entries = getQueueForSalon(salon1Id);
+  const salon2Entries = getQueueForSalon(salon2Id);
+  const salon1Stats = getQueueStats(salon1Id);
+  const salon2Stats = getQueueStats(salon2Id);
+
+  // Combine all salons for display
+  const allSalons = [
+    {
+      id: salon1Id,
+      name: "The Gentlemen's Zone",
+      entries: salon1Entries,
+      stats: salon1Stats
+    },
+    {
+      id: salon2Id,
+      name: 'Style Studio',
+      entries: salon2Entries,
+      stats: salon2Stats
     }
-  };
+  ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'waiting': return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const isLoading = false; // We have demo data loaded immediately
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'waiting': return 'Waiting';
-      case 'in_progress': return 'In Progress';
-      case 'completed': return 'Completed';
-      case 'cancelled': return 'Cancelled';
-      default: return status;
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <section className="container py-16">
         <div className="text-center">
@@ -91,27 +93,37 @@ export default function QueueDashboard() {
         >
           <h3 className="text-xl font-bold mb-4">Current Queue</h3>
           <div className="space-y-3">
-            {queueData.length > 0 ? (
-              queueData.slice(0, 5).map((item, index) => (
-                <div key={item.queue_id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
-                      {item.queue_position}
-                    </div>
-                    <div>
-                      <div className="font-medium">{item.first_name} {item.last_name}</div>
-                      <div className="text-sm text-muted-foreground">{item.service_name}</div>
-                    </div>
+            {allSalons.length > 0 ? (
+              allSalons.map((salon) => (
+                <div key={salon.id} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium">{salon.name}</h4>
+                    <span className="text-sm text-muted-foreground">
+                      {salon.stats?.totalWaiting || 0} waiting
+                    </span>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-xs px-2 py-1 rounded-full ${getStatusColor(item.status)}`}>
-                      {getStatusText(item.status)}
-                    </div>
-                    {item.estimated_wait_time > 0 && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        ~{item.estimated_wait_time} min
+                  <div className="space-y-2">
+                    {salon.entries.slice(0, 3).map((entry, index) => (
+                      <div key={entry.id} className="flex items-center justify-between p-2 rounded bg-muted/50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
+                            {entry.position}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">{entry.customerName}</div>
+                            <div className="text-xs text-muted-foreground">{entry.serviceName}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-xs px-2 py-1 rounded-full ${getQueueStatusColor(entry.status)}`}>
+                            {getQueueStatusText(entry.status)}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {entry.estimatedTime}
+                          </div>
+                        </div>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
               ))
@@ -123,14 +135,6 @@ export default function QueueDashboard() {
               </div>
             )}
           </div>
-          
-          {queueData.length > 5 && (
-            <div className="mt-4 text-center">
-              <button className="text-sm text-primary hover:underline">
-                View all {queueData.length} customers
-              </button>
-            </div>
-          )}
         </motion.div>
 
         {/* Quick Actions */}
@@ -143,22 +147,28 @@ export default function QueueDashboard() {
         >
           <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
           <div className="space-y-4">
-            <button 
-              onClick={() => window.open('/queue_estimator.php', '_blank')}
+            <button
+              onClick={() => navigate('/estimate')}
               className="w-full p-4 rounded-lg border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-all duration-300 group"
             >
               <div className="text-2xl mb-2">⏱️</div>
               <div className="font-medium">Estimate Wait Time</div>
               <div className="text-sm text-muted-foreground">Get accurate wait time estimates</div>
             </button>
-            
-            <button className="w-full p-4 rounded-lg border-2 border-dashed border-accent/30 hover:border-accent/60 hover:bg-accent/5 transition-all duration-300 group">
+
+            <button
+              onClick={() => navigate('/booking')}
+              className="w-full p-4 rounded-lg border-2 border-dashed border-accent/30 hover:border-accent/60 hover:bg-accent/5 transition-all duration-300 group"
+            >
               <div className="text-2xl mb-2">📅</div>
               <div className="font-medium">Book Appointment</div>
               <div className="text-sm text-muted-foreground">Schedule your next visit</div>
             </button>
-            
-            <button className="w-full p-4 rounded-lg border-2 border-dashed border-green-500/30 hover:border-green-500/60 hover:bg-green-500/5 transition-all duration-300 group">
+
+            <button
+              onClick={() => navigate('/services')}
+              className="w-full p-4 rounded-lg border-2 border-dashed border-green-500/30 hover:border-green-500/60 hover:bg-green-500/5 transition-all duration-300 group"
+            >
               <div className="text-2xl mb-2">🏪</div>
               <div className="font-medium">Find Salons</div>
               <div className="text-sm text-muted-foreground">Discover partner salons nearby</div>
@@ -176,15 +186,21 @@ export default function QueueDashboard() {
         className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4"
       >
         <div className="text-center p-4 rounded-lg bg-background/80 border">
-          <div className="text-2xl font-bold text-primary">{queueData.length}</div>
+          <div className="text-2xl font-bold text-primary">
+            {allSalons.reduce((sum, salon) => sum + (salon.stats?.totalWaiting || 0), 0)}
+          </div>
           <div className="text-sm text-muted-foreground">In Queue</div>
         </div>
         <div className="text-center p-4 rounded-lg bg-background/80 border">
-          <div className="text-2xl font-bold text-accent">3</div>
+          <div className="text-2xl font-bold text-accent">{allSalons.length}</div>
           <div className="text-sm text-muted-foreground">Active Salons</div>
         </div>
         <div className="text-center p-4 rounded-lg bg-background/80 border">
-          <div className="text-2xl font-bold text-green-600">12</div>
+          <div className="text-2xl font-bold text-green-600">
+            {allSalons.length > 0
+              ? Math.round(allSalons.reduce((sum, salon) => sum + (salon.stats?.averageWaitTime || 0), 0) / allSalons.length)
+              : 0}
+          </div>
           <div className="text-sm text-muted-foreground">Avg. Wait (min)</div>
         </div>
         <div className="text-center p-4 rounded-lg bg-background/80 border">

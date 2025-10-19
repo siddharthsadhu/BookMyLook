@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Debug Test</title>
+</head>
+<body>
+    <h1>Testing Login API Debug</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Sending login request...';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@bookmylook.com',
+                        password: 'admin123'
+                    })
+                });
+
+                const data = await response.text();
+                resultDiv.textContent = `Status: ${response.status}\n\nResponse: ${data}`;
+
+                try {
+                    const jsonData = JSON.parse(data);
+                    resultDiv.textContent += `\n\nParsed: ${JSON.stringify(jsonData, null, 2)}`;
+                } catch (e) {
+                    resultDiv.textContent += '\n\nResponse is not JSON';
+                }
+            } catch (error) {
+                resultDiv.textContent = `Network Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

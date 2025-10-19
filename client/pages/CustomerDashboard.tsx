@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, MapPin, Phone, Calendar, Star, Users, AlertCircle, CheckCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Clock, MapPin, Phone, Calendar, Star, Users, AlertCircle, CheckCircle, TrendingUp, DollarSign, CalendarDays } from "lucide-react";
 
 interface Booking {
   booking_id: number;
@@ -32,6 +33,7 @@ interface Review {
 
 export default function CustomerDashboard() {
   const { t } = useI18n();
+  const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,10 +119,76 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <div className="container py-16">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Customer Dashboard</h1>
-        <p className="text-muted-foreground">Manage your appointments and salon experiences</p>
+    <div className="container py-8 space-y-8">
+      {/* Welcome Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-3xl font-bold">Welcome back, {user?.firstName}!</h1>
+          <p className="text-muted-foreground mt-1">Manage your appointments and salon experiences</p>
+        </div>
+        <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
+          <Calendar className="mr-2 h-4 w-4" />
+          Book New Appointment
+        </Button>
+      </motion.div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">12</div>
+              <p className="text-xs text-muted-foreground">+2 from last month</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₹3,200</div>
+              <p className="text-xs text-muted-foreground">+₹400 from last month</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Favorite Service</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Haircut</div>
+              <p className="text-xs text-muted-foreground">Most booked service</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">4.5 ⭐</div>
+              <p className="text-xs text-muted-foreground">Based on your reviews</p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       <Tabs defaultValue="bookings" className="space-y-6">
@@ -314,20 +382,30 @@ export default function CustomerDashboard() {
             <CardContent className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium">Full Name</label>
-                  <p className="text-sm text-muted-foreground">John Doe</p>
+                  <label className="text-sm font-medium">First Name</label>
+                  <p className="text-sm text-muted-foreground">{user?.firstName}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Last Name</label>
+                  <p className="text-sm text-muted-foreground">{user?.lastName}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium">Email</label>
-                  <p className="text-sm text-muted-foreground">john.doe@example.com</p>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium">Phone</label>
-                  <p className="text-sm text-muted-foreground">+91 98765 43210</p>
+                  <p className="text-sm text-muted-foreground">{user?.phone}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Role</label>
+                  <p className="text-sm text-muted-foreground">{user?.role}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium">Member Since</label>
-                  <p className="text-sm text-muted-foreground">January 2024</p>
+                  <p className="text-sm text-muted-foreground">
+                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
                 </div>
               </div>
               <Button>Edit Profile</Button>

@@ -185,10 +185,9 @@ export default function Help() {
       </Card>
 
       <Tabs defaultValue="faq" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="faq">FAQ</TabsTrigger>
           <TabsTrigger value="articles">Help Articles</TabsTrigger>
-          <TabsTrigger value="contact">Contact Support</TabsTrigger>
           <TabsTrigger value="resources">Resources</TabsTrigger>
         </TabsList>
 
@@ -318,94 +317,6 @@ export default function Help() {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
-
-        <TabsContent value="contact" className="space-y-6">
-          <div className="grid gap-8 lg:grid-cols-2">
-            {/* Contact Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Send us a Message
-                </CardTitle>
-                <CardDescription>
-                  Can't find what you're looking for? Send us a message and we'll get back to you within 24 hours.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input id="subject" placeholder="What can we help you with?" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Describe your issue or question in detail..."
-                    rows={5}
-                  />
-                </div>
-                <Button className="w-full">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Send Message
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Contact Information */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Phone className="h-5 w-5" />
-                    Call Us
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-lg font-semibold">+91 98765 43210</p>
-                    <p className="text-sm text-muted-foreground">
-                      Mon-Fri: 9:00 AM - 6:00 PM<br />
-                      Sat: 10:00 AM - 4:00 PM
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Mail className="h-5 w-5" />
-                    Email Us
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-lg font-semibold">support@qthrough.com</p>
-                    <p className="text-sm text-muted-foreground">
-                      We typically respond within 24 hours
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Live Chat</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Chat with our support team in real-time
-                  </p>
-                  <Button className="w-full">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Start Chat
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
         </TabsContent>
 
         <TabsContent value="resources" className="space-y-6">

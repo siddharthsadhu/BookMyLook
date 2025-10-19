@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ interface QueueEstimatorProps {
 }
 
 export default function QueueEstimator({ salonId, serviceId, onClose }: QueueEstimatorProps) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     shop_id: salonId || 1,
     service_id: serviceId || 1,
@@ -231,7 +233,14 @@ export default function QueueEstimator({ salonId, serviceId, onClose }: QueueEst
                   >
                     New Estimate
                   </Button>
-                  <Button className="flex-1">
+                  <Button 
+                    className="flex-1"
+                    onClick={() => {
+                      // Navigate to booking page with pre-filled data
+                      navigate(`/booking?salon=${formData.shop_id}&service=${formData.service_id}`);
+                      if (onClose) onClose();
+                    }}
+                  >
                     Join Queue
                   </Button>
                 </div>
