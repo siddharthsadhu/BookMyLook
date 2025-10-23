@@ -25,9 +25,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       const token = localStorage.getItem('bookmylook_token');
+      const rememberMe = localStorage.getItem('bookmylook_remember');
+      const rememberUntil = localStorage.getItem('bookmylook_remember_until');
+
+      // Check if we have a remember me session that's still valid
+      if (rememberMe === 'true' && rememberUntil) {
+        const rememberUntilDate = parseInt(rememberUntil);
+        if (Date.now() > rememberUntilDate) {
+          // Remember me session expired, clean up
+          localStorage.removeItem('bookmylook_remember');
+          localStorage.removeItem('bookmylook_remember_until');
+          localStorage.removeItem('bookmylook_token');
+          localStorage.removeItem('bookmylook_refresh_token');
+          setIsLoading(false);
+          return;
+        }
+      }
+
       if (token) {
         try {
-          const response = await fetch('/api/auth/me', {
+          const response = await fetch('http://localhost:3001/api/auth/me', {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
@@ -42,11 +59,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Token invalid, clear it
             localStorage.removeItem('bookmylook_token');
             localStorage.removeItem('bookmylook_refresh_token');
+            // Don't clear remember me settings unless the session has expired
+            if (rememberMe !== 'true' || (rememberUntil && Date.now() > parseInt(rememberUntil))) {
+              localStorage.removeItem('bookmylook_remember');
+              localStorage.removeItem('bookmylook_remember_until');
+            }
           }
         } catch (error) {
           console.error('Auth check failed:', error);
           localStorage.removeItem('bookmylook_token');
           localStorage.removeItem('bookmylook_refresh_token');
+          // Keep remember me settings for retry
         }
       }
       setIsLoading(false);
@@ -55,9 +78,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  const login = async (credentials: LoginRequest): Promise<{ success: boolean; error?: string }> => {
+  const login = async (credentials: LoginRequest & { rememberMe?: boolean }): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -75,6 +98,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem('bookmylook_token', accessToken);
         localStorage.setItem('bookmylook_refresh_token', refreshToken);
 
+        // Store remember me preference for session management
+        if (credentials.rememberMe) {
+          localStorage.setItem('bookmylook_remember', 'true');
+          localStorage.setItem('bookmylook_remember_until', String(Date.now() + (30 * 24 * 60 * 60 * 1000))); // 30 days
+        } else {
+          localStorage.removeItem('bookmylook_remember');
+          localStorage.removeItem('bookmylook_remember_until');
+        }
+
         return { success: true };
       } else {
         return { success: false, error: data.error || 'Login failed' };
@@ -87,7 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (userData: RegisterRequest): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -118,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async (): Promise<void> => {
     try {
       // Call logout endpoint
-      await fetch('/api/auth/logout', {
+      await fetch('http://localhost:3001/api/auth/logout', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('bookmylook_token')}`,
@@ -132,6 +164,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       localStorage.removeItem('bookmylook_token');
       localStorage.removeItem('bookmylook_refresh_token');
+      // Clear remember me settings on logout
+      localStorage.removeItem('bookmylook_remember');
+      localStorage.removeItem('bookmylook_remember_until');
     }
   };
 
@@ -140,7 +175,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!token) return;
 
     try {
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch('http://localhost:3001/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

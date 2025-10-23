@@ -1,0 +1,10 @@
+{
+  "salonName": "Test Beauty Salon",
+  "ownerName": "John Doe",
+  "contactEmail": "john@example.com",
+  "contactPhone": "9876543210",
+  "location": "Mumbai, Maharashtra",
+  "description": "A premium beauty salon offering haircuts, styling, facials, and more.",
+  "submittedAt": "2025-10-21T16:36:05.094Z",
+  "source": "test"
+}

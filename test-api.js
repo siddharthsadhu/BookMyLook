@@ -1,10 +1,8 @@
-import fetch from 'node-fetch';
-
-async function testLoginAPI() {
+async function testAPI() {
   try {
     console.log('Testing login API...');
 
-    const response = await fetch('http://localhost:8080/api/auth/login', {
+    const response = await fetch('http://localhost:3001/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -34,4 +32,4 @@ async function testLoginAPI() {
   }
 }
 
-testLoginAPI();
+testAPI();

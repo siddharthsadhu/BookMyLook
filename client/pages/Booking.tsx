@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Clock, MapPin, Phone, Mail, Star, Users, Calendar, ArrowLeft, ArrowRight, Check, Sparkles, LogIn, UserPlus } from "lucide-react";
+import { Clock, MapPin, Phone, Mail, Star, Users, Calendar, ArrowLeft, ArrowRight, Check, Sparkles, LogIn, UserPlus, Shield, AlertCircle, Info, MessageSquare, CreditCard, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueue } from "@/contexts/QueueContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -231,7 +231,7 @@ export default function Booking() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addToQueue } = useQueue();
-  const { user, isAuthenticated, login, register } = useAuth();
+  const { user, isAuthenticated, isLoading, login, register } = useAuth();
 
   const [salons, setSalons] = useState<Salon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -272,7 +272,34 @@ export default function Booking() {
         const response = await fetch('/api/shops');
         const data = await response.json();
         if (data.success && data.data?.salons) {
-          setSalons(data.data.salons);
+          console.log('🔗 Using API data, salon count:', data.data.salons.length);
+          console.log('🔗 API salon IDs:', data.data.salons.map((s: any) => s.id));
+          // Transform API data to match our interface
+          const transformedSalons: Salon[] = data.data.salons.map((salon: any) => ({
+            id: salon.id,
+            name: salon.name,
+            slug: salon.slug || salon.name.toLowerCase().replace(/\s+/g, '-'),
+            description: salon.description || '',
+            address: salon.address,
+            city: salon.city || '',
+            phone: salon.phone || '',
+            email: salon.email || '',
+            openingTime: salon.openingTime || '09:00',
+            closingTime: salon.closingTime || '21:00',
+            averageRating: salon.averageRating || 4.0,
+            totalReviews: salon.totalReviews || 0,
+            services: salon.services?.map((service: any) => ({
+              id: service.id,
+              name: service.name,
+              description: service.description || '',
+              price: service.price,
+              durationMinutes: service.durationMinutes,
+              categoryId: service.categoryId || 'cat1',
+              isActive: service.isActive !== false
+            })) || [],
+            _count: salon._count || { bookings: 0 }
+          }));
+          setSalons(transformedSalons);
           return;
         }
         throw new Error('API returned invalid data');
@@ -452,6 +479,8 @@ export default function Booking() {
         ];
 
         setTimeout(() => {
+          console.log('📦 Using mock data, salon count:', mockSalons.length);
+          console.log('📦 Mock salon IDs:', mockSalons.map(s => s.id));
           setSalons(mockSalons);
         }, 500); // Small delay to show loading state
       } finally {
@@ -463,12 +492,185 @@ export default function Booking() {
   }, []);
 
   useEffect(() => {
+    // Only run if we have salons data and URL parameters
+    if (salons.length === 0) return;
+
     // Check for URL parameters to pre-fill salon and service
     const salonParam = searchParams.get('salon');
     const serviceParam = searchParams.get('service');
 
+    console.log('🔍 Checking URL params:', { salonParam, serviceParam, salonsCount: salons.length });
+    console.log('🏪 Available salon IDs:', salons.map(s => s.id));
+    console.log('🏪 Looking for salon ID:', salonParam);
+
     if (salonParam) {
-      const salon = salons.find(s => s.id === salonParam);
+      let salon = salons.find(s => s.id === salonParam);
+
+      // If salon not found in API data, check if we need to fall back to mock data
+      if (!salon && salonParam.startsWith('salon_')) {
+        console.log('🔄 Salon not found in API data, checking mock data...');
+
+        // Load mock data as fallback
+        const mockSalons = [
+          {
+            id: 'salon_gentleman_zone',
+            name: "The Gentlemen's Zone",
+            slug: 'gentlemens-zone',
+            description: 'Premium men\'s grooming salon with modern techniques and traditional care',
+            email: 'contact@gentlemenszone.com',
+            phone: '+91 98765 43210',
+            address: 'Connaught Place, New Delhi',
+            city: 'New Delhi',
+            openingTime: '09:00',
+            closingTime: '21:00',
+            averageRating: 4.8,
+            totalReviews: 156,
+            services: [
+              { id: 'service_haircut', salonId: 'salon_gentleman_zone', name: 'Hair Cut & Styling', price: 350, durationMinutes: 45, isActive: true, description: 'Professional haircut with modern styling techniques', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' },
+              { id: 'service_beard', salonId: 'salon_gentleman_zone', name: 'Beard Grooming', price: 200, durationMinutes: 30, isActive: true, description: 'Complete beard trim, shape and styling', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' },
+              { id: 'service_hairwash', salonId: 'salon_gentleman_zone', name: 'Hair Wash', price: 150, durationMinutes: 20, isActive: true, description: 'Deep conditioning hair wash with premium products', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' },
+              { id: 'service_head_massage', salonId: 'salon_gentleman_zone', name: 'Head Massage', price: 250, durationMinutes: 30, isActive: true, description: 'Relaxing head massage with aromatic oils', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 45 }
+          },
+          {
+            id: 'salon_style_studio',
+            name: 'Style Studio',
+            slug: 'style-studio',
+            description: 'Luxury beauty salon offering complete beauty solutions and wellness treatments',
+            email: 'hello@stylestudio.com',
+            phone: '+91 98765 43211',
+            address: 'Sector 18, Noida',
+            city: 'Noida',
+            openingTime: '10:00',
+            closingTime: '20:00',
+            averageRating: 4.6,
+            totalReviews: 98,
+            services: [
+              { id: 'service_spa', salonId: 'salon_style_studio', name: 'Hair Spa Treatment', price: 800, durationMinutes: 60, isActive: true, description: 'Complete hair spa treatment with deep conditioning', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_facial', salonId: 'salon_style_studio', name: 'Facial Treatment', price: 600, durationMinutes: 45, isActive: true, description: 'Anti-aging facial treatment with premium products', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_nails', salonId: 'salon_style_studio', name: 'Manicure & Pedicure', price: 500, durationMinutes: 90, isActive: true, description: 'Complete nail care with gel application', categoryId: 'cat3', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_bridal_makeup', salonId: 'salon_style_studio', name: 'Bridal Makeup', price: 2500, durationMinutes: 120, isActive: true, description: 'Complete bridal makeup with hair styling', categoryId: 'cat4', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 32 }
+          },
+          {
+            id: 'salon_bliss_spa',
+            name: 'Bliss Spa & Salon',
+            slug: 'bliss-spa-salon',
+            description: 'Luxury wellness center offering premium spa treatments and beauty services',
+            email: 'welcome@blissspa.com',
+            phone: '+91 98765 43213',
+            address: 'Golf Course Road, Gurgaon',
+            city: 'Gurgaon',
+            openingTime: '09:00',
+            closingTime: '20:00',
+            averageRating: 4.9,
+            totalReviews: 145,
+            services: [
+              { id: 'service_swedish_massage', salonId: 'salon_bliss_spa', name: 'Swedish Massage', price: 1500, durationMinutes: 60, isActive: true, description: 'Full body relaxation massage with essential oils', categoryId: 'cat6', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_aromatherapy_facial', salonId: 'salon_bliss_spa', name: 'Aromatherapy Facial', price: 800, durationMinutes: 50, isActive: true, description: 'Luxury facial with aromatic essential oils', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_body_scrub', salonId: 'salon_bliss_spa', name: 'Body Scrub & Wrap', price: 1200, durationMinutes: 45, isActive: true, description: 'Exfoliating body treatment with moisturizing wrap', categoryId: 'cat6', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_luxury_manicure', salonId: 'salon_bliss_spa', name: 'Luxury Manicure', price: 400, durationMinutes: 45, isActive: true, description: 'Premium manicure with paraffin treatment', categoryId: 'cat3', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 56 }
+          },
+          {
+            id: 'salon_glamour_zone',
+            name: 'Glamour Zone',
+            slug: 'glamour-zone',
+            description: 'Complete beauty destination for makeup, hair, and nail services',
+            email: 'info@glamourzone.in',
+            phone: '+91 98765 43215',
+            address: 'DLF Phase 1, Gurgaon',
+            city: 'Gurgaon',
+            openingTime: '09:00',
+            closingTime: '22:00',
+            averageRating: 4.4,
+            totalReviews: 134,
+            services: [
+              { id: 'service_bridal_makeup', salonId: 'salon_glamour_zone', name: 'Bridal Makeup', price: 3000, durationMinutes: 150, isActive: true, description: 'Complete bridal makeup and hair styling', categoryId: 'cat4', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_party_makeup', salonId: 'salon_glamour_zone', name: 'Party Makeup', price: 800, durationMinutes: 60, isActive: true, description: 'Glamorous makeup for parties and events', categoryId: 'cat4', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_hair_styling', salonId: 'salon_glamour_zone', name: 'Hair Styling', price: 500, durationMinutes: 45, isActive: true, description: 'Professional hair styling for any occasion', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_nail_art', salonId: 'salon_glamour_zone', name: 'Nail Art', price: 350, durationMinutes: 60, isActive: true, description: 'Creative nail art and gel extensions', categoryId: 'cat3', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 67 }
+          },
+          {
+            id: 'salon_trendy_tresses',
+            name: 'Trendy Tresses',
+            slug: 'trendy-tresses',
+            description: 'Hair care specialists offering advanced treatments and styling services',
+            email: 'book@trendytresses.com',
+            phone: '+91 98765 43214',
+            address: 'Rajouri Garden, New Delhi',
+            city: 'New Delhi',
+            openingTime: '10:00',
+            closingTime: '21:00',
+            averageRating: 4.5,
+            totalReviews: 167,
+            services: [
+              { id: 'service_hair_extensions', salonId: 'salon_trendy_tresses', name: 'Hair Extensions', price: 2500, durationMinutes: 90, isActive: true, description: 'Premium hair extensions with natural look', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_keratin_treatment', salonId: 'salon_trendy_tresses', name: 'Keratin Treatment', price: 1800, durationMinutes: 120, isActive: true, description: 'Smoothening treatment for frizz-free hair', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_balayage', salonId: 'salon_trendy_tresses', name: 'Balayage Coloring', price: 2200, durationMinutes: 150, isActive: true, description: 'Natural-looking hair coloring technique', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_hair_botox', salonId: 'salon_trendy_tresses', name: 'Hair Botox', price: 1500, durationMinutes: 90, isActive: true, description: 'Intensive hair repair treatment', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 89 }
+          },
+          {
+            id: 'salon_classic_cuts',
+            name: 'Classic Cuts',
+            slug: 'classic-cuts',
+            description: 'Traditional barber shop with authentic grooming services',
+            email: 'contact@classiccuts.in',
+            phone: '+91 98765 43216',
+            address: 'Karol Bagh, New Delhi',
+            city: 'New Delhi',
+            openingTime: '08:00',
+            closingTime: '20:00',
+            averageRating: 4.6,
+            totalReviews: 198,
+            services: [
+              { id: 'service_traditional_haircut', salonId: 'salon_classic_cuts', name: 'Traditional Haircut', price: 250, durationMinutes: 40, isActive: true, description: 'Classic barber-style haircut with hot towel', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_hot_towel_shave', salonId: 'salon_classic_cuts', name: 'Hot Towel Shave', price: 300, durationMinutes: 30, isActive: true, description: 'Traditional hot towel shave with premium products', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_neck_trim', salonId: 'salon_classic_cuts', name: 'Neck & Sideburns Trim', price: 100, durationMinutes: 15, isActive: true, description: 'Precise trimming of neck and sideburns', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_beard_trim', salonId: 'salon_classic_cuts', name: 'Beard Trim', price: 150, durationMinutes: 20, isActive: true, description: 'Professional beard trimming and shaping', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 124 }
+          },
+          {
+            id: 'salon_beauty_boulevard',
+            name: 'Beauty Boulevard',
+            slug: 'beauty-boulevard',
+            description: 'Affordable beauty services for everyone with quality treatments',
+            email: 'hello@beautyboulevard.in',
+            phone: '+91 98765 43217',
+            address: 'Rohini, New Delhi',
+            city: 'New Delhi',
+            openingTime: '09:00',
+            closingTime: '21:00',
+            averageRating: 4.2,
+            totalReviews: 87,
+            services: [
+              { id: 'service_basic_haircut', salonId: 'salon_beauty_boulevard', name: 'Basic Haircut', price: 200, durationMinutes: 30, isActive: true, description: 'Simple and clean haircut for all', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_simple_facial', salonId: 'salon_beauty_boulevard', name: 'Simple Facial', price: 250, durationMinutes: 30, isActive: true, description: 'Basic facial treatment for healthy skin', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_basic_manicure', salonId: 'salon_beauty_boulevard', name: 'Basic Manicure', price: 150, durationMinutes: 30, isActive: true, description: 'Simple manicure with nail care', categoryId: 'cat3', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_hair_wash', salonId: 'salon_beauty_boulevard', name: 'Hair Wash & Blow Dry', price: 180, durationMinutes: 25, isActive: true, description: 'Hair wash with basic blow dry styling', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 95 }
+          }
+        ];
+
+        salon = mockSalons.find(s => s.id === salonParam);
+        if (salon) {
+          console.log('✅ Found salon in mock fallback data:', salon.name);
+          // Temporarily add this salon to the current salons list for this session
+          setSalons(prev => [...prev, salon]);
+        }
+      }
+
+      console.log('🏪 Found salon:', salon?.name, 'for ID:', salonParam);
+
       if (salon) {
         setSelectedSalon(salon);
         setCurrentStep('service');
@@ -476,10 +678,30 @@ export default function Booking() {
           ...prev,
           selected_salon: salonParam
         }));
+
+        // If service parameter is also provided, find and select the service
+        if (serviceParam) {
+          const service = salon.services.find(s => s.id === serviceParam);
+          console.log('✂️ Found service:', service?.name);
+
+          if (service) {
+            setSelectedService(service);
+            setBookingForm(prev => ({
+              ...prev,
+              selected_service: serviceParam
+            }));
+
+            // If user is already authenticated, advance directly to details
+            if (!isLoading && isAuthenticated) {
+              console.log('🚀 User authenticated, advancing to details step');
+              setTimeout(() => setCurrentStep('details'), 100); // Small delay to ensure state updates
+            }
+          }
+        }
       }
     }
 
-    if (serviceParam) {
+    if (serviceParam && !salonParam) {
       setBookingForm(prev => ({
         ...prev,
         selected_service: serviceParam
@@ -487,17 +709,34 @@ export default function Booking() {
     }
   }, [salons, searchParams]);
 
-  // Pre-fill form with authenticated user data
+  // Handle authentication state changes
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (!isLoading && isAuthenticated && selectedService && currentStep === 'service') {
+      setCurrentStep('details');
+    }
+  }, [isAuthenticated, isLoading, selectedService, currentStep]);
+
+  // Auto-populate user data when reaching details step
+  useEffect(() => {
+    if (currentStep === 'details' && isAuthenticated && user && !bookingForm.customer_name) {
+      const fullName = `${user.firstName} ${user.lastName}`.trim();
+
       setBookingForm(prev => ({
         ...prev,
-        customer_name: `${user.firstName} ${user.lastName}`.trim() || prev.customer_name,
-        customer_email: user.email || prev.customer_email,
-        customer_phone: user.phone || prev.customer_phone
+        customer_name: fullName,
+        customer_email: user.email,
+        customer_phone: user.phone || ''
+      }));
+
+      // Clear any existing form errors for auto-filled fields
+      setFormErrors(prev => ({
+        ...prev,
+        customer_name: undefined,
+        customer_email: undefined,
+        customer_phone: user.phone ? undefined : prev.customer_phone
       }));
     }
-  }, [isAuthenticated, user]);
+  }, [currentStep, isAuthenticated, user, bookingForm.customer_name]);
 
   const handleSalonSelect = (salon: Salon) => {
     setSelectedSalon(salon);
@@ -517,10 +756,10 @@ export default function Booking() {
       selected_service: service.id
     }));
 
-    // Check authentication before proceeding to booking details
-    if (!isAuthenticated) {
+    // Check authentication after loading is complete
+    if (!isLoading && !isAuthenticated) {
       setShowAuthModal(true);
-    } else {
+    } else if (!isLoading && isAuthenticated) {
       setCurrentStep('details');
     }
   };
@@ -608,10 +847,13 @@ export default function Booking() {
         notes: bookingForm.special_requests,
       };
 
+      const token = localStorage.getItem('bookmylook_token');
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify(bookingData),
       });
@@ -963,136 +1205,438 @@ export default function Booking() {
               </div>
 
               {/* Booking Form */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Your Details
-                  </CardTitle>
-                  <CardDescription>
-                    Please provide your information to complete the booking
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="customer_name">Full Name *</Label>
-                        <Input
-                          id="customer_name"
-                          value={bookingForm.customer_name}
-                          onChange={(e) => handleInputChange('customer_name', e.target.value)}
-                          placeholder="Enter your full name"
-                          required
-                          className={formErrors.customer_name ? 'border-red-500' : ''}
-                        />
-                        {formErrors.customer_name && (
-                          <p className="text-sm text-red-500">{formErrors.customer_name}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="customer_phone">Phone Number *</Label>
-                        <Input
-                          id="customer_phone"
-                          value={bookingForm.customer_phone}
-                          onChange={(e) => handleInputChange('customer_phone', e.target.value)}
-                          placeholder="Enter your phone number"
-                          required
-                          className={formErrors.customer_phone ? 'border-red-500' : ''}
-                        />
-                        {formErrors.customer_phone && (
-                          <p className="text-sm text-red-500">{formErrors.customer_phone}</p>
-                        )}
-                      </div>
-                    </div>
+              <div className="relative">
+                {/* Background Effects */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5 rounded-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-white/10 via-transparent to-white/5 rounded-3xl"></div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="customer_email">Email Address *</Label>
-                      <Input
-                        id="customer_email"
-                        type="email"
-                        value={bookingForm.customer_email}
-                        onChange={(e) => handleInputChange('customer_email', e.target.value)}
-                        placeholder="Enter your email address"
-                        required
-                        className={formErrors.customer_email ? 'border-red-500' : ''}
-                      />
-                      {formErrors.customer_email && (
-                        <p className="text-sm text-red-500">{formErrors.customer_email}</p>
-                      )}
-                    </div>
+                <Card className="relative border-0 shadow-2xl bg-gradient-to-br from-white via-white to-primary/5 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 overflow-hidden">
+                  {/* Animated Background Pattern */}
+                  <div className="absolute inset-0 opacity-5">
+                    <div className="absolute top-10 left-10 w-32 h-32 bg-primary rounded-full blur-3xl animate-pulse"></div>
+                    <div className="absolute bottom-10 right-10 w-24 h-24 bg-accent rounded-full blur-2xl animate-pulse delay-1000"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-secondary rounded-full blur-3xl animate-pulse delay-500"></div>
+                  </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="preferred_date">Preferred Date *</Label>
-                        <Input
-                          id="preferred_date"
-                          type="date"
-                          value={bookingForm.preferred_date}
-                          onChange={(e) => handleInputChange('preferred_date', e.target.value)}
-                          min={new Date().toISOString().split('T')[0]}
-                          required
-                          className={formErrors.preferred_date ? 'border-red-500' : ''}
-                        />
-                        {formErrors.preferred_date && (
-                          <p className="text-sm text-red-500">{formErrors.preferred_date}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="preferred_time">Preferred Time *</Label>
-                        <Input
-                          id="preferred_time"
-                          type="time"
-                          value={bookingForm.preferred_time}
-                          onChange={(e) => handleInputChange('preferred_time', e.target.value)}
-                          required
-                          className={formErrors.preferred_time ? 'border-red-500' : ''}
-                        />
-                        {formErrors.preferred_time && (
-                          <p className="text-sm text-red-500">{formErrors.preferred_time}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="special_requests">Special Requests</Label>
-                      <Textarea
-                        id="special_requests"
-                        value={bookingForm.special_requests}
-                        onChange={(e) => handleInputChange('special_requests', e.target.value)}
-                        placeholder="Any special requests or notes..."
-                        rows={3}
-                      />
-                    </div>
-
-                    <Separator />
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">
-                        Total: <span className="font-semibold text-primary">₹{selectedService.price}</span>
-                      </div>
-                      <Button
-                        type="submit"
-                        size="lg"
-                        disabled={isSubmitting}
-                        className="px-8"
+                  <CardHeader className="relative pb-8">
+                    <div className="text-center">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                        className="w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl"
                       >
-                        {isSubmitting ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Booking...
-                          </>
-                        ) : (
-                          <>
-                            <Calendar className="h-4 w-4 mr-2" />
-                            Confirm Booking
-                          </>
-                        )}
-                      </Button>
+                        <Sparkles className="h-10 w-10 text-white" />
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent mb-2">
+                          Your Details
+                        </CardTitle>
+                        <CardDescription className="text-lg">
+                          {isAuthenticated && user
+                            ? "✨ Your information is ready - just pick your time!"
+                            : "Tell us about yourself to complete your booking"
+                          }
+                        </CardDescription>
+                      </motion.div>
                     </div>
-                  </form>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+
+                  <CardContent className="relative px-8 pb-8">
+                    <motion.form
+                      onSubmit={handleSubmit}
+                      className="space-y-8"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      {/* Personal Information Section */}
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
+                            <User className="h-4 w-4 text-white" />
+                          </div>
+                          <h3 className="text-xl font-semibold">Personal Information</h3>
+                          {isAuthenticated && user && (
+                            <div className="ml-auto flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
+                              <Check className="h-3 w-3" />
+                              Auto-filled
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-2">
+                          {/* Full Name */}
+                          <motion.div
+                            className="space-y-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.5 }}
+                          >
+                            <Label htmlFor="customer_name" className="text-sm font-medium text-foreground flex items-center gap-2">
+                              <User className="h-4 w-4 text-primary" />
+                              Full Name *
+                              {isAuthenticated && user && (
+                                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full font-medium">
+                                  ✓ Auto-filled
+                                </span>
+                              )}
+                            </Label>
+                            <div className="relative">
+                              <Input
+                                id="customer_name"
+                                value={bookingForm.customer_name}
+                                onChange={(e) => handleInputChange('customer_name', e.target.value)}
+                                placeholder="Enter your full name"
+                                required
+                                readOnly={isAuthenticated && user ? true : false}
+                                className={`h-12 pl-4 pr-4 text-base transition-all duration-300 border-2 rounded-xl ${
+                                  formErrors.customer_name
+                                    ? 'border-red-300 focus:border-red-500 bg-red-50 dark:bg-red-900/10'
+                                    : isAuthenticated && user
+                                      ? 'border-green-300 bg-green-50 dark:bg-green-900/20 focus:border-green-400'
+                                      : 'border-gray-200 hover:border-primary/50 focus:border-primary bg-white dark:bg-gray-800'
+                                } shadow-sm focus:shadow-lg focus:ring-0`}
+                              />
+                              {isAuthenticated && user && (
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                    <Check className="h-3 w-3 text-white" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            {isAuthenticated && user && (
+                              <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                <Shield className="h-3 w-3" />
+                                From your verified account profile
+                              </p>
+                            )}
+                            {formErrors.customer_name && (
+                              <motion.p
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-sm text-red-500 flex items-center gap-1"
+                              >
+                                <AlertCircle className="h-3 w-3" />
+                                {formErrors.customer_name}
+                              </motion.p>
+                            )}
+                          </motion.div>
+
+                          {/* Phone Number */}
+                          <motion.div
+                            className="space-y-3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.6 }}
+                          >
+                            <Label htmlFor="customer_phone" className="text-sm font-medium text-foreground flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-primary" />
+                              Phone Number *
+                            </Label>
+                            <div className="relative">
+                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 z-10">
+                                🇮🇳 +91
+                              </div>
+                              <Input
+                                id="customer_phone"
+                                value={bookingForm.customer_phone}
+                                onChange={(e) => handleInputChange('customer_phone', e.target.value)}
+                                placeholder="9876543210"
+                                required
+                                className={`h-12 pl-16 pr-4 text-base transition-all duration-300 border-2 rounded-xl ${
+                                  formErrors.customer_phone
+                                    ? 'border-red-300 focus:border-red-500 bg-red-50 dark:bg-red-900/10'
+                                    : 'border-gray-200 hover:border-primary/50 focus:border-primary bg-white dark:bg-gray-800'
+                                } shadow-sm focus:shadow-lg focus:ring-0`}
+                              />
+                            </div>
+                            {formErrors.customer_phone && (
+                              <motion.p
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-sm text-red-500 flex items-center gap-1"
+                              >
+                                <AlertCircle className="h-3 w-3" />
+                                {formErrors.customer_phone}
+                              </motion.p>
+                            )}
+                            {isAuthenticated && user && !user.phone && (
+                              <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                                <Info className="h-3 w-3" />
+                                Add phone to your profile for auto-filling
+                              </p>
+                            )}
+                          </motion.div>
+                        </div>
+
+                        {/* Email Address */}
+                        <motion.div
+                          className="space-y-3"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.7 }}
+                        >
+                          <Label htmlFor="customer_email" className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-primary" />
+                            Email Address *
+                            {isAuthenticated && user && (
+                              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full font-medium">
+                                ✓ Auto-filled
+                              </span>
+                            )}
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              id="customer_email"
+                              type="email"
+                              value={bookingForm.customer_email}
+                              onChange={(e) => handleInputChange('customer_email', e.target.value)}
+                              placeholder="your.email@example.com"
+                              required
+                              readOnly={isAuthenticated && user ? true : false}
+                              className={`h-12 pl-4 pr-4 text-base transition-all duration-300 border-2 rounded-xl ${
+                                formErrors.customer_email
+                                  ? 'border-red-300 focus:border-red-500 bg-red-50 dark:bg-red-900/10'
+                                  : isAuthenticated && user
+                                    ? 'border-green-300 bg-green-50 dark:bg-green-900/20 focus:border-green-400'
+                                    : 'border-gray-200 hover:border-primary/50 focus:border-primary bg-white dark:bg-gray-800'
+                              } shadow-sm focus:shadow-lg focus:ring-0`}
+                            />
+                            {isAuthenticated && user && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                  <Check className="h-3 w-3 text-white" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          {isAuthenticated && user && (
+                            <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                              <Shield className="h-3 w-3" />
+                              Secure & verified from your account
+                            </p>
+                          )}
+                          {formErrors.customer_email && (
+                            <motion.p
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="text-sm text-red-500 flex items-center gap-1"
+                            >
+                              <AlertCircle className="h-3 w-3" />
+                              {formErrors.customer_email}
+                            </motion.p>
+                          )}
+                        </motion.div>
+                      </div>
+
+                      {/* Appointment Details Section */}
+                      <motion.div
+                        className="space-y-6 pt-8 border-t border-gray-100 dark:border-gray-700"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-r from-accent to-secondary rounded-lg flex items-center justify-center">
+                            <Calendar className="h-4 w-4 text-white" />
+                          </div>
+                          <h3 className="text-xl font-semibold">Appointment Details</h3>
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-2">
+                          {/* Preferred Date */}
+                          <motion.div
+                            className="space-y-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.9 }}
+                          >
+                            <Label htmlFor="preferred_date" className="text-sm font-medium text-foreground flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-primary" />
+                              Preferred Date *
+                            </Label>
+                            <div className="relative">
+                              <Input
+                                id="preferred_date"
+                                type="date"
+                                value={bookingForm.preferred_date}
+                                onChange={(e) => handleInputChange('preferred_date', e.target.value)}
+                                min={new Date().toISOString().split('T')[0]}
+                                required
+                                className={`h-12 pl-4 pr-4 text-base transition-all duration-300 border-2 rounded-xl ${
+                                  formErrors.preferred_date
+                                    ? 'border-red-300 focus:border-red-500 bg-red-50 dark:bg-red-900/10'
+                                    : 'border-gray-200 hover:border-primary/50 focus:border-primary bg-white dark:bg-gray-800'
+                                } shadow-sm focus:shadow-lg focus:ring-0 cursor-pointer`}
+                              />
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <Calendar className="h-4 w-4" />
+                              </div>
+                            </div>
+                            {formErrors.preferred_date && (
+                              <motion.p
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-sm text-red-500 flex items-center gap-1"
+                              >
+                                <AlertCircle className="h-3 w-3" />
+                                {formErrors.preferred_date}
+                              </motion.p>
+                            )}
+                          </motion.div>
+
+                          {/* Preferred Time */}
+                          <motion.div
+                            className="space-y-3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 1.0 }}
+                          >
+                            <Label htmlFor="preferred_time" className="text-sm font-medium text-foreground flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-primary" />
+                              Preferred Time *
+                            </Label>
+                            <div className="relative">
+                              <Input
+                                id="preferred_time"
+                                type="time"
+                                value={bookingForm.preferred_time}
+                                onChange={(e) => handleInputChange('preferred_time', e.target.value)}
+                                required
+                                className={`h-12 pl-4 pr-4 text-base transition-all duration-300 border-2 rounded-xl ${
+                                  formErrors.preferred_time
+                                    ? 'border-red-300 focus:border-red-500 bg-red-50 dark:bg-red-900/10'
+                                    : 'border-gray-200 hover:border-primary/50 focus:border-primary bg-white dark:bg-gray-800'
+                                } shadow-sm focus:shadow-lg focus:ring-0 cursor-pointer`}
+                              />
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <Clock className="h-4 w-4" />
+                              </div>
+                            </div>
+                            {formErrors.preferred_time && (
+                              <motion.p
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-sm text-red-500 flex items-center gap-1"
+                              >
+                                <AlertCircle className="h-3 w-3" />
+                                {formErrors.preferred_time}
+                              </motion.p>
+                            )}
+                          </motion.div>
+                        </div>
+                      </motion.div>
+
+                      {/* Special Requests Section */}
+                      <motion.div
+                        className="space-y-3 pt-6"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1.1 }}
+                      >
+                        <Label htmlFor="special_requests" className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-primary" />
+                          Special Requests
+                          <span className="text-xs text-muted-foreground">(Optional)</span>
+                        </Label>
+                        <Textarea
+                          id="special_requests"
+                          value={bookingForm.special_requests}
+                          onChange={(e) => handleInputChange('special_requests', e.target.value)}
+                          placeholder="Any special requirements, allergies, or preferences..."
+                          rows={3}
+                          className="min-h-[100px] text-base border-2 border-gray-200 hover:border-primary/50 focus:border-primary rounded-xl shadow-sm focus:shadow-lg focus:ring-0 resize-none transition-all duration-300"
+                        />
+                      </motion.div>
+
+                      {/* Payment Summary & CTA */}
+                      <motion.div
+                        className="pt-8 border-t border-gray-100 dark:border-gray-700"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1.2 }}
+                      >
+                        {/* Price Summary Card */}
+                        <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl p-6 mb-8 border border-primary/10">
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-lg font-semibold">Booking Summary</h4>
+                            <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                              <CreditCard className="h-4 w-4" />
+                              Secure Payment
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">{selectedService.name}</span>
+                              <span className="font-semibold">₹{selectedService.price}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">GST (18%)</span>
+                              <span className="font-semibold">₹{Math.round(selectedService.price * 0.18)}</span>
+                            </div>
+                            <Separator />
+                            <div className="flex justify-between items-center text-lg">
+                              <span className="font-semibold">Total Amount</span>
+                              <span className="font-bold text-primary text-xl">₹{selectedService.price + Math.round(selectedService.price * 0.18)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CTA Button */}
+                        <div className="text-center">
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Button
+                              type="submit"
+                              size="lg"
+                              disabled={isSubmitting}
+                              className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary via-accent to-secondary hover:from-primary/90 hover:via-accent/90 hover:to-secondary/90 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl"
+                            >
+                              {isSubmitting ? (
+                                <div className="flex items-center justify-center gap-3">
+                                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                                  <span>Confirming Your Booking...</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-center gap-3">
+                                  <Sparkles className="h-5 w-5" />
+                                  <span>Complete Booking</span>
+                                  <ArrowRight className="h-5 w-5" />
+                                </div>
+                              )}
+                            </Button>
+                          </motion.div>
+
+                          <p className="text-xs text-muted-foreground mt-4 flex items-center justify-center gap-4">
+                            <span className="flex items-center gap-1">
+                              <Shield className="h-3 w-3" />
+                              Secure & Encrypted
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <CreditCard className="h-3 w-3" />
+                              Multiple Payment Options
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              Instant Confirmation
+                            </span>
+                          </p>
+                        </div>
+                      </motion.div>
+                    </motion.form>
+                  </CardContent>
+                </Card>
+              </div>
             </motion.div>
           )}
 

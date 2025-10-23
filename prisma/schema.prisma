@@ -19,7 +19,7 @@ model User {
   phone             String?          @unique
   password          String?
   firstName         String
-  lastName          String
+  lastName          String?
   avatar            String?
   role              UserRole         @default(CUSTOMER)
   emailVerified     Boolean          @default(false)

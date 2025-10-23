@@ -5,10 +5,12 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { Server as SocketIOServer } from "socket.io";
+import { createServer as createHttpServer } from "http";
 import { ApiResponse, UserRole } from "@shared/api";
 
 // Import Prisma client
-import { PrismaClient } from "@generated/prisma";
+import { PrismaClient } from "../generated/prisma/index.js";
 
 // Import route handlers
 import { handleDemo } from "./routes/demo";
@@ -31,13 +33,18 @@ import {
   handleGetContactSubmissions, 
   handleGetContactStats 
 } from "./routes/contact";
-import {
+import { 
   handleRegister,
   handleLogin,
   handleRefreshToken,
   handleLogout,
-  handleGetCurrentUser
+  handleRequestPasswordReset,
+  handleResetPassword
 } from "./routes/auth";
+import { handlePartnershipInquiry } from "./routes/partnerships";
+import { handleSeedAdmin } from "./routes/admin";
+import { authRateLimit, registrationRateLimit, generalRateLimit, securityHeaders } from "./utils/security";
+import { ErrorResponse, handlePrismaError } from "./utils/error-handling";
 import {
   handleGetQueues,
   handleGetQueueEntry,
@@ -119,8 +126,89 @@ const authorize = (...roles: UserRole[]) => {
 export function createServer() {
   const app = express();
 
+  // Create HTTP server first
+  const httpServer = createHttpServer(app);
+
   // Initialize Prisma client
   const prisma = new PrismaClient();
+
+  // Initialize Socket.IO server
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: [
+        process.env.FRONTEND_URL || 'http://localhost:8080',
+        'http://localhost:8081',
+        'http://127.0.0.1:61781' // Vite proxy port
+      ],
+      credentials: true
+    },
+    transports: ['websocket', 'polling']
+  });
+
+  // Socket.IO middleware for authentication
+  io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        socket.data.user = {
+          userId: decoded.userId,
+          email: decoded.email,
+          role: decoded.role
+        };
+        next();
+      } catch (error) {
+        next(new Error('Authentication error'));
+      }
+    } else {
+      // Allow anonymous connections for public features
+      socket.data.user = null;
+      next();
+    }
+  });
+
+  // Socket.IO connection handling
+  io.on('connection', (socket) => {
+    console.log(`🔌 Client connected: ${socket.id}`, socket.data.user ? `User: ${socket.data.user.email}` : 'Anonymous');
+
+    // Join user-specific rooms for targeted updates
+    if (socket.data.user) {
+      socket.join(`user_${socket.data.user.userId}`);
+      socket.join(`role_${socket.data.user.role}`);
+
+      // Role-specific room joins
+      switch (socket.data.user.role) {
+        case 'SALON_OWNER':
+          socket.join('salon_owners');
+          break;
+        case 'ADMIN':
+          socket.join('admins');
+          break;
+        case 'CUSTOMER':
+          socket.join('customers');
+          break;
+      }
+    }
+
+    // Handle subscription to salon-specific updates
+    socket.on('subscribe_to_salon', (salonId: string) => {
+      socket.join(`salon_${salonId}`);
+      console.log(`📡 ${socket.id} subscribed to salon: ${salonId}`);
+    });
+
+    // Handle unsubscription from salon-specific updates
+    socket.on('unsubscribe_from_salon', (salonId: string) => {
+      socket.leave(`salon_${salonId}`);
+      console.log(`📡 ${socket.id} unsubscribed from salon: ${salonId}`);
+    });
+
+    socket.on('disconnect', () => {
+      console.log(`🔌 Client disconnected: ${socket.id}`);
+    });
+  });
+
+  // Attach io instance to app for use in routes
+  app.set('io', io);
 
   // Middleware to attach Prisma to request
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -128,17 +216,34 @@ export function createServer() {
     next();
   });
 
+  // Body parsing middleware
+  app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
+  app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded bodies
+
+  // Cookie parsing middleware
+  app.use(cookieParser());
+
   // Security Middleware
   app.use(helmet());
   app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:8080',
+      'http://localhost:8081',
+      'http://127.0.0.1:61781', // Vite proxy port
+      'http://127.0.0.1:54600' // Browser preview port
+    ],
     credentials: true
   }));
   
-  // Body Parsing Middleware
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-  app.use(cookieParser());
+  // Rate limiting middleware
+  app.use('/api/auth/login', authRateLimit);
+  app.use('/api/auth/register', registrationRateLimit);
+
+  // General rate limiting for all API routes
+  app.use('/api', generalRateLimit);
+
+  // Security headers
+  app.use(securityHeaders);
 
   // Health Check
   app.get("/api/health", async (_req, res) => {
@@ -169,11 +274,13 @@ export function createServer() {
   app.get("/api/demo", handleDemo);
   
   // ===== AUTH ROUTES =====
-  app.post("/api/auth/register", handleRegister);
-  app.post("/api/auth/login", handleLogin);
-  app.post("/api/auth/refresh", handleRefreshToken);
+  app.post("/api/auth/register", registrationRateLimit, handleRegister);
+  app.post("/api/auth/login", authRateLimit, handleLogin);
+  app.post("/api/auth/refresh", authRateLimit, handleRefreshToken);
   app.post("/api/auth/logout", handleLogout);
-  app.get("/api/auth/me", authenticateToken, handleGetCurrentUser);
+  // app.get("/api/auth/me", authenticateToken, handleGetCurrentUser); // TODO: Implement this endpoint
+  app.post("/api/auth/forgot-password", authRateLimit, handleRequestPasswordReset);
+  app.post("/api/auth/reset-password", authRateLimit, handleResetPassword);
   
   // Public salon and service routes
   app.get("/api/shops", handleShops);
@@ -193,6 +300,12 @@ export function createServer() {
   
   // Contact form (public)
   app.post("/api/contact", handleContactSubmission);
+  
+  // Partnership inquiry (public)
+  app.post("/api/partnerships/inquire", handlePartnershipInquiry);
+
+  // Admin seeding (public - for initial setup)
+  app.post("/api/admin/seed", handleSeedAdmin);
 
   // ===== PROTECTED ROUTES (Authentication Required) =====
   
@@ -218,27 +331,18 @@ export function createServer() {
   );
 
   // ===== ERROR HANDLING =====
-  
-  // 404 Handler
-  // app.use('/api/*', (req: Request, res: Response) => {
-  //   const response: ApiResponse = {
-  //     success: false,
-  //     error: 'Endpoint not found'
-  //   };
-  //   res.status(404).json(response);
-  // });
 
   // Global Error Handler
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error('Error:', err);
-    const response: ApiResponse = {
-      success: false,
-      error: process.env.NODE_ENV === 'production' 
-        ? 'Internal server error' 
-        : err.message
-    };
-    res.status(500).json(response);
+    // Handle Prisma errors specifically
+    if (err.message?.includes('P') && err.message?.length < 10) {
+      const prismaError = handlePrismaError(err);
+      return ErrorResponse.send(res, prismaError);
+    }
+
+    // Handle other operational errors
+    ErrorResponse.send(res, err);
   });
 
-  return app;
+  return httpServer;
 }

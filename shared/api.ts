@@ -22,14 +22,14 @@ export interface DemoResponse {
 }
 
 // ===== USER & AUTH TYPES =====
-export type UserRole = 'CUSTOMER' | 'SALON_OWNER' | 'STAFF' | 'ADMIN';
+export type UserRole = 'CUSTOMER' | 'SALON_OWNER' | 'ADMIN';
 
 export interface User {
   id: string;
-  email: string;
+  email?: string;
   phone?: string | null;
   firstName: string;
-  lastName: string;
+  lastName: string | null; // Optional in database
   avatar?: string | null;
   role: UserRole;
   emailVerified: boolean;
@@ -47,11 +47,11 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  email: string;
+  email?: string;
   phone: string;
   password: string;
   firstName: string;
-  lastName: string;
+  lastName?: string; // Optional
   role?: UserRole;
 }
 
@@ -149,31 +149,6 @@ export interface CreateServiceRequest {
   depositAmount?: number;
 }
 
-// ===== STAFF TYPES =====
-export interface Staff {
-  id: string;
-  userId: string;
-  salonId: string;
-  designation: string;
-  experience: number;
-  specialization: string[];
-  bio?: string | null;
-  isAvailable: boolean;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  user?: User;
-}
-
-export interface StaffSchedule {
-  id: string;
-  staffId: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  isWorking: boolean;
-}
-
 // ===== BOOKING TYPES =====
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
 export type PaymentStatus = 'PENDING' | 'PARTIAL' | 'PAID' | 'REFUNDED' | 'FAILED';
@@ -210,7 +185,6 @@ export interface Booking {
   user?: User;
   salon?: Salon;
   service?: Service;
-  staff?: Staff;
 }
 
 export interface CreateBookingRequest {

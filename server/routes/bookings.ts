@@ -1,208 +1,313 @@
 import { RequestHandler } from "express";
-import { Booking, BookingRequest, ApiResponse } from "@shared/api";
+import { Booking, CreateBookingRequest, ApiResponse } from "@shared/api";
 
-// Mock data for demonstration - in production, this would come from a database
-const mockBookings: Booking[] = [
-  {
-    booking_id: 1,
-    customer_id: 1,
-    customer_name: "John Doe",
-    customer_email: "john.doe@example.com",
-    customer_phone: "+91 98765 43210",
-    shop_id: 1,
-    salon_name: "Style Studio",
-    service_id: 1,
-    service_name: "Haircut & Styling",
-    appointment_date: "2024-01-25",
-    appointment_time: "14:30",
-    status: "upcoming",
-    queue_position: 2,
-    estimated_wait: 15,
-    price: 800,
-    salon_address: "123 Main Street, Mumbai",
-    salon_phone: "+91 98765 43210",
-    special_requests: "Please trim the sides shorter",
-    created_at: "2024-01-20T10:00:00Z",
-    updated_at: "2024-01-20T10:00:00Z"
-  },
-  {
-    booking_id: 2,
-    customer_id: 2,
-    customer_name: "Jane Smith",
-    customer_email: "jane.smith@example.com",
-    customer_phone: "+91 98765 43211",
-    shop_id: 2,
-    salon_name: "Beauty Lounge",
-    service_id: 4,
-    service_name: "Facial Treatment",
-    appointment_date: "2024-01-23",
-    appointment_time: "10:00",
-    status: "completed",
-    price: 1200,
-    salon_address: "456 Park Avenue, Delhi",
-    salon_phone: "+91 98765 43211",
-    created_at: "2024-01-18T09:00:00Z",
-    updated_at: "2024-01-23T11:00:00Z"
-  }
-];
+function generateBookingNumber(): string {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `BML-${timestamp}-${random}`;
+}
 
-export const handleGetBookings: RequestHandler = (req, res) => {
+export const handleGetBookings: RequestHandler = async (req, res) => {
   try {
-    const { customer_id, shop_id, status } = req.query;
-    
-    let filteredBookings = mockBookings;
-    
-    if (customer_id) {
-      filteredBookings = filteredBookings.filter(booking => 
-        booking.customer_id === parseInt(customer_id as string)
-      );
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      const response: ApiResponse = {
+        success: false,
+        error: 'User not authenticated'
+      };
+      return res.status(401).json(response);
     }
-    
-    if (shop_id) {
-      filteredBookings = filteredBookings.filter(booking => 
-        booking.shop_id === parseInt(shop_id as string)
-      );
-    }
-    
+
+    const { status, page = 1, limit = 10 } = req.query;
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    const where: any = { userId };
     if (status) {
-      filteredBookings = filteredBookings.filter(booking => 
-        booking.status === status
-      );
+      where.status = status;
     }
-    
+
+    const [bookings, total] = await Promise.all([
+      req.prisma.booking.findMany({
+        where,
+        include: {
+          salon: true,
+          service: true,
+          staff: { include: { user: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limitNum
+      }),
+      req.prisma.booking.count({ where })
+    ]);
+
     const response: ApiResponse<Booking[]> = {
       success: true,
-      data: filteredBookings
+      data: bookings,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum)
+      }
     };
-    
+
     res.json(response);
   } catch (error) {
+    console.error('Get bookings error:', error);
     const response: ApiResponse = {
       success: false,
-      error: "Failed to fetch bookings"
+      error: 'Failed to fetch bookings'
     };
     res.status(500).json(response);
   }
 };
 
-export const handleCreateBooking: RequestHandler = (req, res) => {
+export const handleCreateBooking: RequestHandler = async (req, res) => {
   try {
-    const bookingData: BookingRequest = req.body;
-    
-    // Validate required fields
-    if (!bookingData.customer_name || !bookingData.customer_email || 
-        !bookingData.customer_phone || !bookingData.shop_id || 
-        !bookingData.service_id || !bookingData.appointment_date || 
-        !bookingData.appointment_time) {
+    const userId = req.user?.userId;
+    if (!userId) {
       const response: ApiResponse = {
         success: false,
-        error: "Missing required fields"
+        error: 'User not authenticated'
+      };
+      return res.status(401).json(response);
+    }
+
+    const bookingData: CreateBookingRequest = req.body;
+
+    // Validate required fields
+    if (!bookingData.salonId || !bookingData.serviceId || !bookingData.appointmentDate || !bookingData.appointmentTime || !bookingData.customerName || !bookingData.customerEmail || !bookingData.customerPhone) {
+      const response: ApiResponse = {
+        success: false,
+        error: 'Missing required fields: salonId, serviceId, appointmentDate, appointmentTime, customerName, customerEmail, customerPhone'
       };
       return res.status(400).json(response);
     }
-    
-    // Create new booking
-    const newBooking: Booking = {
-      booking_id: mockBookings.length + 1,
-      customer_id: Math.floor(Math.random() * 1000) + 1, // Mock customer ID
-      ...bookingData,
-      salon_name: "Mock Salon", // Would be fetched from shop data
-      service_name: "Mock Service", // Would be fetched from service data
-      status: "upcoming",
-      queue_position: Math.floor(Math.random() * 5) + 1,
-      estimated_wait: Math.floor(Math.random() * 30) + 5,
-      price: Math.floor(Math.random() * 2000) + 500,
-      salon_address: "Mock Address",
-      salon_phone: "+91 98765 43210",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    mockBookings.push(newBooking);
-    
+
+    // Fetch service details to get price and duration
+    const service = await req.prisma.service.findUnique({
+      where: { id: bookingData.serviceId },
+      include: { salon: true }
+    });
+
+    if (!service) {
+      const response: ApiResponse = {
+        success: false,
+        error: 'Service not found'
+      };
+      return res.status(404).json(response);
+    }
+
+    // Check if salon is active
+    if (!service.salon.isActive) {
+      const response: ApiResponse = {
+        success: false,
+        error: 'Salon is not active'
+      };
+      return res.status(400).json(response);
+    }
+
+    // Check if service is active
+    if (!service.isActive) {
+      const response: ApiResponse = {
+        success: false,
+        error: 'Service is not active'
+      };
+      return res.status(400).json(response);
+    }
+
+    // Calculate appointment details
+    const appointmentDate = new Date(bookingData.appointmentDate);
+    const [hours, minutes] = bookingData.appointmentTime.split(':').map(Number);
+    const startDateTime = new Date(appointmentDate);
+    startDateTime.setHours(hours, minutes, 0, 0);
+    const endDateTime = new Date(startDateTime.getTime() + service.durationMinutes * 60000);
+    const endTime = endDateTime.toTimeString().slice(0, 5);
+
+    // Calculate pricing
+    const servicePrice = service.price;
+    const discount = service.discountPrice ? service.price - service.discountPrice : 0;
+    const tax = servicePrice * 0.18; // 18% GST
+    const totalAmount = servicePrice - discount + tax;
+
+    // Create booking
+    const booking = await req.prisma.booking.create({
+      data: {
+        bookingNumber: generateBookingNumber(),
+        userId,
+        salonId: bookingData.salonId,
+        serviceId: bookingData.serviceId,
+        staffId: bookingData.staffId || null,
+        appointmentDate,
+        appointmentTime: bookingData.appointmentTime,
+        endTime,
+        servicePrice,
+        discount,
+        tax,
+        totalAmount,
+        depositAmount: service.depositAmount || 0,
+        status: 'PENDING',
+        paymentStatus: 'PENDING',
+        customerName: bookingData.customerName,
+        customerPhone: bookingData.customerPhone,
+        customerEmail: bookingData.customerEmail,
+        notes: bookingData.notes || null
+      }
+    });
+
     const response: ApiResponse<Booking> = {
       success: true,
-      data: newBooking,
-      message: "Booking created successfully"
+      data: booking,
+      message: 'Booking created successfully'
     };
-    
+
+    // Broadcast real-time booking event
+    const io = req.app.get('io');
+    if (io) {
+      // Emit to salon-specific room
+      io.to(`salon_${bookingData.salonId}`).emit('booking:created', {
+        booking,
+        salonId: bookingData.salonId,
+        customerId: userId
+      });
+
+      // Emit to user-specific room
+      io.to(`user_${userId}`).emit('booking:created', {
+        booking,
+        salonId: bookingData.salonId
+      });
+
+      console.log(`📡 Broadcasted booking creation: ${booking.bookingNumber}`);
+    }
+
     res.status(201).json(response);
   } catch (error) {
+    console.error('Create booking error:', error);
     const response: ApiResponse = {
       success: false,
-      error: "Failed to create booking"
+      error: 'Failed to create booking'
     };
     res.status(500).json(response);
   }
 };
 
-export const handleUpdateBooking: RequestHandler = (req, res) => {
+export const handleUpdateBooking: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.userId;
     const updateData = req.body;
-    
-    const bookingIndex = mockBookings.findIndex(booking => booking.booking_id === parseInt(id));
-    
-    if (bookingIndex === -1) {
+
+    if (!userId) {
       const response: ApiResponse = {
         success: false,
-        error: "Booking not found"
+        error: 'User not authenticated'
+      };
+      return res.status(401).json(response);
+    }
+
+    // Check if booking exists and belongs to user
+    const booking = await req.prisma.booking.findFirst({
+      where: {
+        id,
+        userId
+      }
+    });
+
+    if (!booking) {
+      const response: ApiResponse = {
+        success: false,
+        error: 'Booking not found'
       };
       return res.status(404).json(response);
     }
-    
+
     // Update booking
-    mockBookings[bookingIndex] = {
-      ...mockBookings[bookingIndex],
-      ...updateData,
-      updated_at: new Date().toISOString()
-    };
-    
+    const updatedBooking = await req.prisma.booking.update({
+      where: { id },
+      data: updateData
+    });
+
     const response: ApiResponse<Booking> = {
       success: true,
-      data: mockBookings[bookingIndex],
-      message: "Booking updated successfully"
+      data: updatedBooking,
+      message: 'Booking updated successfully'
     };
-    
+
     res.json(response);
   } catch (error) {
+    console.error('Update booking error:', error);
     const response: ApiResponse = {
       success: false,
-      error: "Failed to update booking"
+      error: 'Failed to update booking'
     };
     res.status(500).json(response);
   }
 };
 
-export const handleCancelBooking: RequestHandler = (req, res) => {
+export const handleCancelBooking: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const bookingIndex = mockBookings.findIndex(booking => booking.booking_id === parseInt(id));
-    
-    if (bookingIndex === -1) {
+    const userId = req.user?.userId;
+
+    if (!userId) {
       const response: ApiResponse = {
         success: false,
-        error: "Booking not found"
+        error: 'User not authenticated'
+      };
+      return res.status(401).json(response);
+    }
+
+    // Check if booking exists and belongs to user
+    const booking = await req.prisma.booking.findFirst({
+      where: {
+        id,
+        userId
+      }
+    });
+
+    if (!booking) {
+      const response: ApiResponse = {
+        success: false,
+        error: 'Booking not found'
       };
       return res.status(404).json(response);
     }
-    
+
+    // Check if booking can be cancelled
+    if (booking.status === 'COMPLETED' || booking.status === 'CANCELLED' || booking.status === 'IN_PROGRESS') {
+      const response: ApiResponse = {
+        success: false,
+        error: 'Cannot cancel booking in current status'
+      };
+      return res.status(400).json(response);
+    }
+
     // Cancel booking
-    mockBookings[bookingIndex].status = "cancelled";
-    mockBookings[bookingIndex].updated_at = new Date().toISOString();
-    
+    const updatedBooking = await req.prisma.booking.update({
+      where: { id },
+      data: {
+        status: 'CANCELLED',
+        cancellationReason: 'Cancelled by customer',
+        cancelledBy: 'customer'
+      }
+    });
+
     const response: ApiResponse<Booking> = {
       success: true,
-      data: mockBookings[bookingIndex],
-      message: "Booking cancelled successfully"
+      data: updatedBooking,
+      message: 'Booking cancelled successfully'
     };
-    
+
     res.json(response);
   } catch (error) {
+    console.error('Cancel booking error:', error);
     const response: ApiResponse = {
       success: false,
-      error: "Failed to cancel booking"
+      error: 'Failed to cancel booking'
     };
     res.status(500).json(response);
   }

@@ -1,0 +1,1 @@
+    errors.push('Password is required to secure your account');

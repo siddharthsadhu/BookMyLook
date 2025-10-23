@@ -304,61 +304,111 @@ export default function Services() {
 
   if (loading) {
     return (
-      <div className="container py-16">
+      <div className="min-h-screen bg-accent/10 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading salons...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading salons...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container py-16">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          {t("services_title")}
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+    <div className="min-h-screen bg-accent/10 flex flex-col relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C92AC%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
+
+      <div className="flex-1 relative z-10">
+        <div className="container py-12 space-y-12">
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-6"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-semibold border border-blue-200"
+        >
+          <Users className="h-4 w-4" />
+          Discover Premium Services
+        </motion.div>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 bg-clip-text text-transparent leading-tight"
+        >
+          Find Your Perfect Salon
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed"
+        >
           Discover our partner salons and book your next appointment with real-time queue estimates.
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
-      {/* Search and Filter Controls */}
-      <div className="mb-8 space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search salons by name, address, or city..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+      {/* Enhanced Search and Filter Controls */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-gradient-to-br from-white via-slate-50/50 to-white rounded-2xl border border-slate-200/60 shadow-lg backdrop-blur-sm p-8"
+      >
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1 group">
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-200">
+                <Search className="h-5 w-5" />
+              </div>
+              <Input
+                placeholder="Search salons by name, address, or city..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 h-12 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white/80 backdrop-blur-sm text-slate-800 placeholder:text-slate-400 transition-all duration-300"
+              />
+            </div>
+            <Select value={selectedServiceType} onValueChange={setSelectedServiceType}>
+              <SelectTrigger className="w-full md:w-64 h-12 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white/80 backdrop-blur-sm text-slate-800 transition-all duration-300">
+                <SelectValue placeholder="Filter by service type" />
+              </SelectTrigger>
+              <SelectContent className="bg-white/95 backdrop-blur-xl border-slate-200">
+                <SelectItem value="all" className="hover:bg-blue-50 focus:bg-blue-50">All Services</SelectItem>
+                {getAllServiceTypes().map((serviceType) => (
+                  <SelectItem key={serviceType} value={serviceType} className="hover:bg-blue-50 focus:bg-blue-50">
+                    {serviceType}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={selectedServiceType} onValueChange={setSelectedServiceType}>
-            <SelectTrigger className="w-full md:w-64">
-              <SelectValue placeholder="Filter by service" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Services</SelectItem>
-              {getAllServiceTypes().map((serviceType) => (
-                <SelectItem key={serviceType} value={serviceType}>
-                  {serviceType}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
-        {/* View Mode Toggle */}
-        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "salons" | "services")}>
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="salons">Browse by Salons</TabsTrigger>
-            <TabsTrigger value="services">Browse by Services</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+          {/* Premium View Mode Toggle */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "salons" | "services")}>
+              <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 p-1 rounded-xl shadow-inner border border-slate-200">
+                <TabsTrigger value="salons" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">
+                  🏪 Browse by Salons
+                </TabsTrigger>
+                <TabsTrigger value="services" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">
+                  ✂️ Browse by Services
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </motion.div>
+        </div>
+      </motion.div>
 
       <Tabs value={viewMode}>
         <TabsContent value="salons" className="space-y-6">
@@ -369,42 +419,86 @@ export default function Services() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -4 }}
+                className="group"
               >
-                <Card className="hover:shadow-lg transition-shadow duration-300">
-                  <CardHeader>
+                <Card className="shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/30 to-white backdrop-blur-sm hover:shadow-2xl transition-all duration-500 overflow-hidden ring-1 ring-slate-200/50 hover:ring-slate-300/70">
+                  {/* Gradient Border Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                  <CardHeader className="relative bg-gradient-to-r from-blue-50/50 via-indigo-50/50 to-purple-50/50 border-b border-slate-100/60">
                     <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-xl">{salon.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-1 mt-1">
-                          <MapPin className="h-4 w-4" />
-                          {salon.address}, {salon.city}
-                        </CardDescription>
+                      <div className="space-y-2">
+                        <motion.h3
+                          className="text-xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors duration-200"
+                          whileHover={{ scale: 1.02 }}
+                        >
+                          {salon.name}
+                        </motion.h3>
+                        <div className="flex items-center gap-1 text-slate-600">
+                          <MapPin className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm">{salon.address}, {salon.city}</span>
+                        </div>
                       </div>
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-slate-200/60 text-slate-700 rounded-full text-sm font-bold shadow-lg hover:shadow-xl hover:bg-white/90 transition-all duration-300 ring-1 ring-white/20"
+                      >
+                        <Clock className="h-3 w-3 text-blue-600" />
                         {salon.openingTime} - {salon.closingTime}
-                      </Badge>
+                      </motion.div>
+                    </div>
+
+                    {/* Rating and Reviews */}
+                    <div className="flex items-center gap-4 mt-4">
+                      <div className="flex items-center gap-1">
+                        {[1,2,3,4,5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 ${star <= Math.floor(salon.averageRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                          />
+                        ))}
+                        <span className="text-sm font-medium text-slate-700 ml-1">{salon.averageRating}</span>
+                      </div>
+                      <span className="text-sm text-slate-600">({salon.totalReviews} reviews)</span>
+                      <span className="text-sm text-slate-600">•</span>
+                      <span className="text-sm text-slate-600">{salon._count.bookings} bookings</span>
                     </div>
                   </CardHeader>
-                  <CardContent>
+
+                  <CardContent className="p-6">
                     {salon.description && (
-                      <p className="text-sm text-muted-foreground mb-4">{salon.description}</p>
+                      <p className="text-slate-600 mb-6 leading-relaxed">{salon.description}</p>
                     )}
 
                     <div className="space-y-3 mb-6">
-                      <h4 className="font-semibold">Available Services:</h4>
-                      {salon.services?.map((service) => (
-                        <div key={service.id} className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
-                          <div>
-                            <div className="font-medium">{service.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {service.durationMinutes} min • ₹{service.price}
+                      <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                        <Filter className="h-4 w-4 text-blue-600" />
+                        Available Services
+                      </h4>
+                      {salon.services?.slice(0, 3).map((service) => (
+                        <motion.div
+                          key={service.id}
+                          whileHover={{ scale: 1.01 }}
+                          className="flex items-center justify-between bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200/60 hover:border-slate-300/80 transition-all duration-300 cursor-pointer group/service"
+                        >
+                          <div className="space-y-1">
+                            <div className="font-semibold text-slate-800 group-hover/service:text-slate-900 transition-colors duration-200">{service.name}</div>
+                            <div className="text-sm text-slate-600 flex items-center gap-3">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {service.durationMinutes} min
+                              </span>
+                              <span className="flex items-center gap-1">
+                                ₹{service.price}
+                              </span>
                             </div>
                           </div>
                           <div className="flex gap-2">
                             <Button
                               size="sm"
                               onClick={() => handleBookClick(salon.id, service.id)}
+                              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 border-0 ring-2 ring-primary/20 hover:ring-primary/40"
                             >
                               Book
                             </Button>
@@ -412,35 +506,57 @@ export default function Services() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleEstimateClick(salon.id, service.id)}
+                              className="border-2 border-slate-200/60 bg-white/80 backdrop-blur-sm hover:bg-white/90 text-slate-700 hover:text-slate-800 font-semibold shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-300 ring-1 ring-white/20 hover:ring-slate-200/40"
                             >
                               Estimate
                             </Button>
                           </div>
-                        </div>
+                        </motion.div>
                       )) || (
-                        <div className="text-sm text-muted-foreground">Loading services...</div>
+                        <div className="text-sm text-slate-500">Loading services...</div>
+                      )}
+
+                      {salon.services && salon.services.length > 3 && (
+                        <motion.div
+                          whileHover={{ scale: 1.01 }}
+                          className="text-center pt-2"
+                        >
+                          <button
+                            onClick={() => setSelectedSalon(selectedSalon === salon.id ? null : salon.id)}
+                            className="bg-white/80 backdrop-blur-sm hover:bg-white/90 text-slate-700 font-semibold text-sm hover:text-slate-800 px-4 py-2 rounded-full border border-slate-200/60 hover:border-slate-300/80 shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-300 ring-1 ring-white/20 hover:ring-slate-200/40"
+                          >
+                            {selectedSalon === salon.id ? 'Show Less Services' : `View ${salon.services.length - 3} More Services`}
+                          </button>
+                        </motion.div>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-100/60">
+                      <div className="flex items-center gap-4 text-sm text-slate-600">
                         {salon.phone && (
-                          <span className="flex items-center gap-1">
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex items-center gap-1 hover:text-slate-800 transition-colors duration-200 cursor-pointer"
+                          >
                             <Phone className="h-3 w-3" />
-                            {salon.phone}
-                          </span>
+                            <span>{salon.phone}</span>
+                          </motion.div>
                         )}
                         {salon.email && (
-                          <span className="flex items-center gap-1">
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="flex items-center gap-1 hover:text-slate-800 transition-colors duration-200 cursor-pointer"
+                          >
                             <Mail className="h-3 w-3" />
-                            {salon.email}
-                          </span>
+                            <span>{salon.email}</span>
+                          </motion.div>
                         )}
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setSelectedSalon(selectedSalon === salon.id ? null : salon.id)}
+                        className="bg-white/80 backdrop-blur-sm hover:bg-white/90 text-slate-700 font-semibold shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-300 border border-slate-200/60 hover:border-slate-300/80 ring-1 ring-white/20 hover:ring-slate-200/40"
                       >
                         {selectedSalon === salon.id ? 'Show Less' : 'View Details'}
                       </Button>
@@ -452,15 +568,49 @@ export default function Services() {
           </div>
 
           {getFilteredSalons().length === 0 && (
-            <Card>
-              <CardContent className="text-center py-16">
-                <div className="text-6xl mb-4">🏪</div>
-                <h3 className="text-xl font-semibold mb-2">No salons found</h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search criteria or check back later for new partner salons.
-                </p>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-16"
+            >
+              <Card className="max-w-md mx-auto shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/30 to-white backdrop-blur-sm ring-1 ring-slate-200/50">
+                <CardContent className="text-center py-12 px-8">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                    className="text-6xl mb-6"
+                  >
+                    🏪
+                  </motion.div>
+                  <motion.h3
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-xl font-bold text-slate-800 mb-3"
+                  >
+                    No salons found
+                  </motion.h3>
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-slate-600 mb-6 leading-relaxed"
+                  >
+                    Try adjusting your search criteria or check back later for new partner salons.
+                  </motion.p>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <Button className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white font-bold shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 border-0 ring-2 ring-blue-500/20 hover:ring-blue-400/40">
+                      Clear Filters
+                    </Button>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
         </TabsContent>
 
@@ -506,7 +656,7 @@ export default function Services() {
                                     <div className="flex gap-2 mt-3">
                                       <Button
                                         size="sm"
-                                        className="flex-1"
+                                        className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 border-0 ring-2 ring-primary/20 hover:ring-primary/40"
                                         onClick={() => handleBookClick(salon.id, service.id)}
                                       >
                                         Book
@@ -514,7 +664,7 @@ export default function Services() {
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1"
+                                        className="flex-1 border-2 border-slate-200/60 bg-white/80 backdrop-blur-sm hover:bg-white/90 text-slate-700 hover:text-slate-800 font-semibold shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-300 ring-1 ring-white/20 hover:ring-slate-200/40"
                                         onClick={() => handleEstimateClick(salon.id, service.id)}
                                       >
                                         Estimate
@@ -535,18 +685,59 @@ export default function Services() {
           </div>
 
           {getAllServiceTypes().length === 0 && (
-            <Card>
-              <CardContent className="text-center py-16">
-                <div className="text-6xl mb-4">✂️</div>
-                <h3 className="text-xl font-semibold mb-2">No services available</h3>
-                <p className="text-muted-foreground">
-                  Check back later for new services from our partner salons.
-                </p>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-16"
+            >
+              <Card className="max-w-md mx-auto shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/30 to-white backdrop-blur-sm ring-1 ring-slate-200/50">
+                <CardContent className="text-center py-12 px-8">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                    className="text-5xl mb-6"
+                  >
+                    ✂️
+                  </motion.div>
+                  <motion.h3
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-xl font-bold text-slate-800 mb-3"
+                  >
+                    No services available
+                  </motion.h3>
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-slate-600 mb-6 leading-relaxed"
+                  >
+                    Check back later for new services from our partner salons.
+                  </motion.p>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
         </TabsContent>
       </Tabs>
+        </div>
+      </div>
+
+      {/* Floating Elements */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1.1, type: "spring" }}
+        className="absolute -top-6 -right-6 w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full shadow-xl"
+      ></motion.div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1.3, type: "spring" }}
+        className="absolute -bottom-6 -left-6 w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full shadow-xl"
+      ></motion.div>
     </div>
   );
 }

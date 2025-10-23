@@ -98,12 +98,24 @@ export const handleGetQueueEntry: RequestHandler = async (req, res) => {
 // Update queue entry status (for salon staff)
 export const handleUpdateQueueEntry: RequestHandler = async (req, res) => {
   try {
+    const { status } = req.body;
+    const io = req.app.get('io');
+
     // Mock response
     const response: ApiResponse = {
       success: true,
-      data: { status: 'COMPLETED' },
+      data: { status },
       message: "Queue entry updated"
     };
+
+    // Broadcast real-time update
+    if (io) {
+      io.to('salon_owners').emit('queue:entry_updated', {
+        salonId: 'salon_gentleman_zone', // In real app, get from req
+        entryId: req.params.id,
+        updates: { status }
+      });
+    }
 
     res.json(response);
   } catch (error) {
@@ -119,6 +131,8 @@ export const handleUpdateQueueEntry: RequestHandler = async (req, res) => {
 // Add booking to queue
 export const handleAddToQueue: RequestHandler = async (req, res) => {
   try {
+    const io = req.app.get('io');
+
     // Mock response
     const response: ApiResponse = {
       success: true,
@@ -128,6 +142,21 @@ export const handleAddToQueue: RequestHandler = async (req, res) => {
       },
       message: "Added to queue successfully"
     };
+
+    // Broadcast real-time update
+    if (io) {
+      io.to('salon_gentleman_zone').emit('queue:entry_added', {
+        salonId: 'salon_gentleman_zone',
+        entry: {
+          id: `queue_${Date.now()}`,
+          salonId: 'salon_gentleman_zone',
+          customerName: req.body.customerName || 'New Customer',
+          serviceName: req.body.serviceName || 'Service',
+          position: 1,
+          status: 'WAITING'
+        }
+      });
+    }
 
     res.status(201).json(response);
   } catch (error) {

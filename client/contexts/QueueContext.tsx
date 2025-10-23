@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { QueueEntry, QueueStats, QueueUpdate, CreateQueueEntryRequest, UpdateQueueEntryRequest } from '@shared/api';
+import { useRealTime } from './RealTimeContext';
 
 // Queue State Interface
 interface QueueState {
@@ -130,7 +131,51 @@ const QueueContext = createContext<{
 // Queue Provider Component
 export function QueueProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(queueReducer, initialState);
+  const { socket, subscribeToSalon, unsubscribeFromSalon } = useRealTime();
   const demoDataLoadedRef = React.useRef(false);
+
+  // Real-time event listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for queue entry added
+    socket.on('queue:entry_added', (data: { salonId: string; entry: QueueEntry }) => {
+      console.log('📡 Queue entry added:', data);
+      dispatch({ type: 'ADD_ENTRY', payload: data.entry });
+    });
+
+    // Listen for queue entry updated
+    socket.on('queue:entry_updated', (data: { salonId: string; entryId: string; updates: Partial<QueueEntry> }) => {
+      console.log('📡 Queue entry updated:', data);
+      dispatch({ type: 'UPDATE_ENTRY', payload: data });
+    });
+
+    // Listen for queue entry removed
+    socket.on('queue:entry_removed', (data: { salonId: string; entryId: string }) => {
+      console.log('📡 Queue entry removed:', data);
+      dispatch({ type: 'REMOVE_ENTRY', payload: data });
+    });
+
+    // Listen for queue positions updated
+    socket.on('queue:positions_updated', (data: { salonId: string; entries: QueueEntry[] }) => {
+      console.log('📡 Queue positions updated:', data);
+      dispatch({ type: 'UPDATE_POSITIONS', payload: data });
+    });
+
+    // Listen for queue stats updated
+    socket.on('queue:stats_updated', (data: { salonId: string; stats: QueueStats }) => {
+      console.log('📡 Queue stats updated:', data);
+      dispatch({ type: 'SET_STATS', payload: data });
+    });
+
+    return () => {
+      socket.off('queue:entry_added');
+      socket.off('queue:entry_updated');
+      socket.off('queue:entry_removed');
+      socket.off('queue:positions_updated');
+      socket.off('queue:stats_updated');
+    };
+  }, [socket]);
 
   // Initialize demo data
   useEffect(() => {
@@ -324,6 +369,9 @@ export function QueueProvider({ children }: { children: ReactNode }) {
 
       dispatch({ type: 'ADD_ENTRY', payload: newEntry });
 
+      // Note: Real-time event will be emitted by the server API route
+      // No need to emit from client - server handles broadcasting
+
       // Update stats
       const stats: QueueStats = {
         salonId: request.salonId,
@@ -336,6 +384,8 @@ export function QueueProvider({ children }: { children: ReactNode }) {
       };
 
       dispatch({ type: 'SET_STATS', payload: { salonId: request.salonId, stats } });
+
+      // Note: Real-time stats update will be emitted by the server API route
 
       console.info(`✅ Added ${request.customerName} to queue at position ${position}`);
     } catch (error) {
@@ -368,6 +418,8 @@ export function QueueProvider({ children }: { children: ReactNode }) {
 
       dispatch({ type: 'UPDATE_ENTRY', payload: { salonId, entryId, updates: updateData } });
 
+      // Note: Real-time event will be emitted by the server API route
+
       // If status changed to completed, recalculate positions
       if (updates.status === 'COMPLETED') {
         const salonEntries = state.entries[salonId] || [];
@@ -381,6 +433,8 @@ export function QueueProvider({ children }: { children: ReactNode }) {
           }));
 
         dispatch({ type: 'UPDATE_POSITIONS', payload: { salonId, entries: updatedEntries } });
+
+        // Note: Real-time positions update will be emitted by the server API route
       }
 
       console.info(`🔄 Updated queue entry ${entryId} status to ${updates.status}`);
@@ -395,6 +449,8 @@ export function QueueProvider({ children }: { children: ReactNode }) {
     try {
       dispatch({ type: 'REMOVE_ENTRY', payload: { salonId, entryId } });
 
+      // Note: Real-time event will be emitted by the server API route
+
       // Recalculate positions for remaining entries
       const salonEntries = state.entries[salonId] || [];
       const updatedEntries = salonEntries
@@ -406,6 +462,8 @@ export function QueueProvider({ children }: { children: ReactNode }) {
         }));
 
       dispatch({ type: 'UPDATE_POSITIONS', payload: { salonId, entries: updatedEntries } });
+
+      // Note: Real-time positions update will be emitted by the server API route
 
       console.info(`🗑️ Removed entry ${entryId} from queue`);
     } catch (error) {

@@ -11,9 +11,11 @@ import { I18nProvider } from "@/i18n";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueueProvider } from "@/contexts/QueueContext";
+import { RealTimeProvider } from "@/contexts/RealTimeContext";
 import { AnimatePresence, motion } from "framer-motion";
 import SiteLayout from "./layouts/SiteLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Services from "./pages/Services";
 import Booking from "./pages/Booking";
@@ -24,6 +26,7 @@ import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Reviews from "./pages/Reviews";
 import Help from "./pages/Help";
@@ -60,6 +63,11 @@ function RouterWithTransitions(){
         <Route path="/register" element={
           <ProtectedRoute requireAuth={false}>
             <Register />
+          </ProtectedRoute>
+        } />
+        <Route path="/reset-password" element={
+          <ProtectedRoute requireAuth={false}>
+            <ResetPassword />
           </ProtectedRoute>
         } />
         
@@ -103,22 +111,25 @@ function Page({ children }: {children: React.ReactNode}){
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <QueueProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <I18nProvider>
-              <BrowserRouter future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-              }}>
-                <RouterWithTransitions />
-              </BrowserRouter>
-            </I18nProvider>
-          </TooltipProvider>
-        </AuthProvider>
-      </QueueProvider>
+      <AuthProvider>
+        <RealTimeProvider>
+          <QueueProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <I18nProvider>
+                <BrowserRouter future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}>
+                  <ScrollToTop />
+                  <RouterWithTransitions />
+                </BrowserRouter>
+              </I18nProvider>
+            </TooltipProvider>
+          </QueueProvider>
+        </RealTimeProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

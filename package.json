@@ -11,7 +11,9 @@
     ]
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"vite\" \"tsx server/dev-server.ts\"",
+    "dev:vite": "vite",
+    "dev:server": "tsx server/dev-server.ts",
     "build": "prisma generate && pnpm run build:client && pnpm run build:server",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
@@ -30,6 +32,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.16.1",
+    "@sendgrid/mail": "^8.1.6",
+    "@types/socket.io": "^3.0.2",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -87,8 +91,8 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.5",
-    "@types/nodemailer": "^6.4.14",
     "@types/node": "^24.2.1",
+    "@types/nodemailer": "^6.4.14",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@types/three": "^0.176.0",
@@ -97,6 +101,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "concurrently": "^9.2.1",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",

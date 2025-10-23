@@ -201,17 +201,188 @@ export default function Estimate() {
     const salonIdParam = urlParams.get('salonId');
     const serviceIdParam = urlParams.get('serviceId');
 
+    console.log('🔍 Estimate page - Checking URL params:', { salonIdParam, serviceIdParam, salonsCount: salons.length });
+
     if (salonIdParam) {
-      setFormData(prev => ({ ...prev, salonId: salonIdParam, serviceId: serviceIdParam || '' }));
+      let selectedSalon = salons.find(s => s.id === salonIdParam);
+      let selectedService = null;
 
-      // Auto-calculate estimate if both salon and service are provided and salons are loaded
-      if (serviceIdParam && salons.length > 0 && !hasAutoCalculated.current) {
-        const selectedSalon = salons.find(s => s.id === salonIdParam);
-        const selectedService = selectedSalon?.services.find(s => s.id === serviceIdParam);
+      // If salon not found in API data, check if we need to fall back to mock data
+      if (!selectedSalon && salonIdParam.startsWith('salon_')) {
+        console.log('🔄 Estimate page - Salon not found in API data, checking mock data...');
 
-        if (selectedSalon && selectedService) {
-          hasAutoCalculated.current = true;
-          calculateEstimate();
+        // Load mock data as fallback
+        const mockSalons = [
+          {
+            id: 'salon_gentleman_zone',
+            name: "The Gentlemen's Zone",
+            slug: 'gentlemens-zone',
+            description: 'Premium men\'s grooming salon with modern techniques and traditional care',
+            email: 'contact@gentlemenszone.com',
+            phone: '+91 98765 43210',
+            address: 'Connaught Place, New Delhi',
+            city: 'New Delhi',
+            openingTime: '09:00',
+            closingTime: '21:00',
+            averageRating: 4.8,
+            totalReviews: 156,
+            services: [
+              { id: 'service_haircut', salonId: 'salon_gentleman_zone', name: 'Hair Cut & Styling', price: 350, durationMinutes: 45, isActive: true, description: 'Professional haircut with modern styling techniques', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' },
+              { id: 'service_beard', salonId: 'salon_gentleman_zone', name: 'Beard Grooming', price: 200, durationMinutes: 30, isActive: true, description: 'Complete beard trim, shape and styling', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' },
+              { id: 'service_hairwash', salonId: 'salon_gentleman_zone', name: 'Hair Wash', price: 150, durationMinutes: 20, isActive: true, description: 'Deep conditioning hair wash with premium products', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' },
+              { id: 'service_head_massage', salonId: 'salon_gentleman_zone', name: 'Head Massage', price: 250, durationMinutes: 30, isActive: true, description: 'Relaxing head massage with aromatic oils', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-01-01T00:00:00.000Z', updatedAt: '2024-01-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 45 }
+          },
+          {
+            id: 'salon_style_studio',
+            name: 'Style Studio',
+            slug: 'style-studio',
+            description: 'Luxury beauty salon offering complete beauty solutions and wellness treatments',
+            email: 'hello@stylestudio.com',
+            phone: '+91 98765 43211',
+            address: 'Sector 18, Noida',
+            city: 'Noida',
+            openingTime: '10:00',
+            closingTime: '20:00',
+            averageRating: 4.6,
+            totalReviews: 98,
+            services: [
+              { id: 'service_spa', salonId: 'salon_style_studio', name: 'Hair Spa Treatment', price: 800, durationMinutes: 60, isActive: true, description: 'Complete hair spa treatment with deep conditioning', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_facial', salonId: 'salon_style_studio', name: 'Facial Treatment', price: 600, durationMinutes: 45, isActive: true, description: 'Anti-aging facial treatment with premium products', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_nails', salonId: 'salon_style_studio', name: 'Manicure & Pedicure', price: 500, durationMinutes: 90, isActive: true, description: 'Complete nail care with gel application', categoryId: 'cat3', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_bridal_makeup', salonId: 'salon_style_studio', name: 'Bridal Makeup', price: 2500, durationMinutes: 120, isActive: true, description: 'Complete bridal makeup with hair styling', categoryId: 'cat4', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 32 }
+          },
+          {
+            id: 'salon_bliss_spa',
+            name: 'Bliss Spa & Salon',
+            slug: 'bliss-spa-salon',
+            description: 'Luxury wellness center offering premium spa treatments and beauty services',
+            email: 'welcome@blissspa.com',
+            phone: '+91 98765 43213',
+            address: 'Golf Course Road, Gurgaon',
+            city: 'Gurgaon',
+            openingTime: '09:00',
+            closingTime: '20:00',
+            averageRating: 4.9,
+            totalReviews: 145,
+            services: [
+              { id: 'service_swedish_massage', salonId: 'salon_bliss_spa', name: 'Swedish Massage', price: 1500, durationMinutes: 60, isActive: true, description: 'Full body relaxation massage with essential oils', categoryId: 'cat6', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_aromatherapy_facial', salonId: 'salon_bliss_spa', name: 'Aromatherapy Facial', price: 800, durationMinutes: 50, isActive: true, description: 'Luxury facial with aromatic essential oils', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_body_scrub', salonId: 'salon_bliss_spa', name: 'Body Scrub & Wrap', price: 1200, durationMinutes: 45, isActive: true, description: 'Exfoliating body treatment with moisturizing wrap', categoryId: 'cat6', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_luxury_manicure', salonId: 'salon_bliss_spa', name: 'Luxury Manicure', price: 400, durationMinutes: 45, isActive: true, description: 'Premium manicure with paraffin treatment', categoryId: 'cat3', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 56 }
+          },
+          {
+            id: 'salon_glamour_zone',
+            name: 'Glamour Zone',
+            slug: 'glamour-zone',
+            description: 'Complete beauty destination for makeup, hair, and nail services',
+            email: 'info@glamourzone.in',
+            phone: '+91 98765 43215',
+            address: 'DLF Phase 1, Gurgaon',
+            city: 'Gurgaon',
+            openingTime: '09:00',
+            closingTime: '22:00',
+            averageRating: 4.4,
+            totalReviews: 134,
+            services: [
+              { id: 'service_bridal_makeup', salonId: 'salon_glamour_zone', name: 'Bridal Makeup', price: 3000, durationMinutes: 150, isActive: true, description: 'Complete bridal makeup and hair styling', categoryId: 'cat4', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_party_makeup', salonId: 'salon_glamour_zone', name: 'Party Makeup', price: 800, durationMinutes: 60, isActive: true, description: 'Glamorous makeup for parties and events', categoryId: 'cat4', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_hair_styling', salonId: 'salon_glamour_zone', name: 'Hair Styling', price: 500, durationMinutes: 45, isActive: true, description: 'Professional hair styling for any occasion', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_nail_art', salonId: 'salon_glamour_zone', name: 'Nail Art', price: 350, durationMinutes: 60, isActive: true, description: 'Creative nail art and gel extensions', categoryId: 'cat3', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 67 }
+          },
+          {
+            id: 'salon_trendy_tresses',
+            name: 'Trendy Tresses',
+            slug: 'trendy-tresses',
+            description: 'Hair care specialists offering advanced treatments and styling services',
+            email: 'book@trendytresses.com',
+            phone: '+91 98765 43214',
+            address: 'Rajouri Garden, New Delhi',
+            city: 'New Delhi',
+            openingTime: '10:00',
+            closingTime: '21:00',
+            averageRating: 4.5,
+            totalReviews: 167,
+            services: [
+              { id: 'service_hair_extensions', salonId: 'salon_trendy_tresses', name: 'Hair Extensions', price: 2500, durationMinutes: 90, isActive: true, description: 'Premium hair extensions with natural look', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_keratin_treatment', salonId: 'salon_trendy_tresses', name: 'Keratin Treatment', price: 1800, durationMinutes: 120, isActive: true, description: 'Smoothening treatment for frizz-free hair', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_balayage', salonId: 'salon_trendy_tresses', name: 'Balayage Coloring', price: 2200, durationMinutes: 150, isActive: true, description: 'Natural-looking hair coloring technique', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_hair_botox', salonId: 'salon_trendy_tresses', name: 'Hair Botox', price: 1500, durationMinutes: 90, isActive: true, description: 'Intensive hair repair treatment', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 89 }
+          },
+          {
+            id: 'salon_classic_cuts',
+            name: 'Classic Cuts',
+            slug: 'classic-cuts',
+            description: 'Traditional barber shop with authentic grooming services',
+            email: 'contact@classiccuts.in',
+            phone: '+91 98765 43216',
+            address: 'Karol Bagh, New Delhi',
+            city: 'New Delhi',
+            openingTime: '08:00',
+            closingTime: '20:00',
+            averageRating: 4.6,
+            totalReviews: 198,
+            services: [
+              { id: 'service_traditional_haircut', salonId: 'salon_classic_cuts', name: 'Traditional Haircut', price: 250, durationMinutes: 40, isActive: true, description: 'Classic barber-style haircut with hot towel', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_hot_towel_shave', salonId: 'salon_classic_cuts', name: 'Hot Towel Shave', price: 300, durationMinutes: 30, isActive: true, description: 'Traditional hot towel shave with premium products', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_neck_trim', salonId: 'salon_classic_cuts', name: 'Neck & Sideburns Trim', price: 100, durationMinutes: 15, isActive: true, description: 'Precise trimming of neck and sideburns', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_beard_trim', salonId: 'salon_classic_cuts', name: 'Beard Trim', price: 150, durationMinutes: 20, isActive: true, description: 'Professional beard trimming and shaping', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 124 }
+          },
+          {
+            id: 'salon_beauty_boulevard',
+            name: 'Beauty Boulevard',
+            slug: 'beauty-boulevard',
+            description: 'Affordable beauty services for everyone with quality treatments',
+            email: 'hello@beautyboulevard.in',
+            phone: '+91 98765 43217',
+            address: 'Rohini, New Delhi',
+            city: 'New Delhi',
+            openingTime: '09:00',
+            closingTime: '21:00',
+            averageRating: 4.2,
+            totalReviews: 87,
+            services: [
+              { id: 'service_basic_haircut', salonId: 'salon_beauty_boulevard', name: 'Basic Haircut', price: 200, durationMinutes: 30, isActive: true, description: 'Simple and clean haircut for all', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_simple_facial', salonId: 'salon_beauty_boulevard', name: 'Simple Facial', price: 250, durationMinutes: 30, isActive: true, description: 'Basic facial treatment for healthy skin', categoryId: 'cat2', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_basic_manicure', salonId: 'salon_beauty_boulevard', name: 'Basic Manicure', price: 150, durationMinutes: 30, isActive: true, description: 'Simple manicure with nail care', categoryId: 'cat3', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' },
+              { id: 'service_hair_wash', salonId: 'salon_beauty_boulevard', name: 'Hair Wash & Blow Dry', price: 180, durationMinutes: 25, isActive: true, description: 'Hair wash with basic blow dry styling', categoryId: 'cat1', discountPrice: null, requiresDeposit: false, depositAmount: null, createdAt: '2024-02-01T00:00:00.000Z', updatedAt: '2024-02-01T00:00:00.000Z' }
+            ],
+            _count: { bookings: 95 }
+          }
+        ];
+
+        selectedSalon = mockSalons.find(s => s.id === salonIdParam);
+        if (selectedSalon) {
+          console.log('✅ Estimate page - Found salon in mock fallback data:', selectedSalon.name);
+          // Temporarily add this salon to the current salons list for this session
+          setSalons(prev => [...prev, selectedSalon]);
+        }
+      }
+
+      // Set form data with found salon
+      if (selectedSalon) {
+        setFormData(prev => ({ ...prev, salonId: salonIdParam, serviceId: serviceIdParam || '' }));
+
+        // Auto-calculate estimate if both salon and service are provided
+        if (serviceIdParam && !hasAutoCalculated.current) {
+          selectedService = selectedSalon.services.find(s => s.id === serviceIdParam);
+
+          if (selectedService) {
+            console.log('✂️ Estimate page - Auto-calculating for service:', selectedService.name);
+            hasAutoCalculated.current = true;
+            setTimeout(() => calculateEstimate(), 500); // Small delay to ensure state updates
+          }
         }
       }
     }
