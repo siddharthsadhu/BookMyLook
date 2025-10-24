@@ -100,21 +100,52 @@ export const handleUpdateQueueEntry: RequestHandler = async (req, res) => {
   try {
     const { status } = req.body;
     const io = req.app.get('io');
+    const entryId = req.params.id;
 
-    // Mock response
+    // Mock response with enhanced data
     const response: ApiResponse = {
       success: true,
-      data: { status },
-      message: "Queue entry updated"
+      data: {
+        id: entryId,
+        status,
+        updatedAt: new Date()
+      },
+      message: "Queue entry updated successfully"
     };
 
-    // Broadcast real-time update
+    // Broadcast real-time update to all connected clients
     if (io) {
-      io.to('salon_owners').emit('queue:entry_updated', {
-        salonId: 'salon_gentleman_zone', // In real app, get from req
-        entryId: req.params.id,
-        updates: { status }
+      // Emit to salon-specific room
+      io.to('salon_gentleman_zone').emit('queue:entry_updated', {
+        salonId: 'salon_gentleman_zone',
+        entryId: entryId,
+        updates: {
+          status,
+          ...(status === 'CALLED' && { calledAt: new Date() }),
+          ...(status === 'IN_SERVICE' && { startedAt: new Date() }),
+          ...(status === 'COMPLETED' && { completedAt: new Date() })
+        }
       });
+
+      // Also emit to salon owners for dashboard updates
+      io.to('salon_owners').emit('queue:entry_updated', {
+        salonId: 'salon_gentleman_zone',
+        entryId: entryId,
+        updates: {
+          status,
+          ...(status === 'CALLED' && { calledAt: new Date() }),
+          ...(status === 'IN_SERVICE' && { startedAt: new Date() }),
+          ...(status === 'COMPLETED' && { completedAt: new Date() })
+        }
+      });
+
+      // If completed, emit positions update
+      if (status === 'COMPLETED') {
+        io.to('salon_gentleman_zone').emit('queue:positions_updated', {
+          salonId: 'salon_gentleman_zone',
+          entries: [] // In real app, would recalculate positions
+        });
+      }
     }
 
     res.json(response);
@@ -132,28 +163,73 @@ export const handleUpdateQueueEntry: RequestHandler = async (req, res) => {
 export const handleAddToQueue: RequestHandler = async (req, res) => {
   try {
     const io = req.app.get('io');
+    const { customerName, serviceName, bookingId, salonId } = req.body;
 
-    // Mock response
+    // Generate mock queue entry
+    const tokenNumber = Math.floor(Math.random() * 100) + 1;
+    const now = new Date();
+
+    const newEntry = {
+      id: `queue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      salonId: salonId || 'salon_gentleman_zone',
+      bookingId: bookingId || `booking_${Date.now()}`,
+      customerName: customerName || 'New Customer',
+      customerPhone: '+91 9876543210',
+      serviceName: serviceName || 'Hair Service',
+      serviceId: 'service_haircut',
+      tokenNumber,
+      position: 1, // In real app, calculate actual position
+      totalInQueue: 1, // In real app, calculate total
+      estimatedTime: new Date(now.getTime() + 15 * 60000).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }),
+      estimatedWaitMinutes: 15,
+      status: 'WAITING',
+      joinedAt: now,
+      calledAt: null,
+      startedAt: null,
+      completedAt: null,
+      notes: req.body.notes || null
+    };
+
     const response: ApiResponse = {
       success: true,
       data: {
-        tokenNumber: Math.floor(Math.random() * 100) + 1,
-        position: 1
+        tokenNumber,
+        position: 1,
+        estimatedTime: newEntry.estimatedTime,
+        entry: newEntry
       },
       message: "Added to queue successfully"
     };
 
-    // Broadcast real-time update
+    // Broadcast real-time update to all connected clients
     if (io) {
-      io.to('salon_gentleman_zone').emit('queue:entry_added', {
-        salonId: 'salon_gentleman_zone',
-        entry: {
-          id: `queue_${Date.now()}`,
-          salonId: 'salon_gentleman_zone',
-          customerName: req.body.customerName || 'New Customer',
-          serviceName: req.body.serviceName || 'Service',
-          position: 1,
-          status: 'WAITING'
+      // Emit to salon-specific room
+      io.to(newEntry.salonId).emit('queue:entry_added', {
+        salonId: newEntry.salonId,
+        entry: newEntry
+      });
+
+      // Also emit to salon owners for dashboard updates
+      io.to('salon_owners').emit('queue:entry_added', {
+        salonId: newEntry.salonId,
+        entry: newEntry
+      });
+
+      // Emit queue stats update
+      io.to(newEntry.salonId).emit('queue:stats_updated', {
+        salonId: newEntry.salonId,
+        stats: {
+          salonId: newEntry.salonId,
+          totalWaiting: 1,
+          totalInService: 0,
+          totalCompleted: 0,
+          averageWaitTime: 15,
+          nextCustomerEstimatedTime: newEntry.estimatedTime,
+          peakHours: ['09:00-11:00', '14:00-16:00']
         }
       });
     }

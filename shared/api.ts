@@ -159,7 +159,6 @@ export interface Booking {
   userId: string;
   salonId: string;
   serviceId: string;
-  staffId?: string | null;
   appointmentDate: Date;
   appointmentTime: string;
   endTime: string;
@@ -190,7 +189,6 @@ export interface Booking {
 export interface CreateBookingRequest {
   salonId: string;
   serviceId: string;
-  staffId?: string;
   appointmentDate: string;
   appointmentTime: string;
   customerName: string;
@@ -297,7 +295,6 @@ export interface Review {
   serviceRating?: number | null;
   ambienceRating?: number | null;
   cleanlinessRating?: number | null;
-  staffRating?: number | null;
   valueRating?: number | null;
   isVerified: boolean;
   isVisible: boolean;
@@ -319,7 +316,6 @@ export interface CreateReviewRequest {
   serviceRating?: number;
   ambienceRating?: number;
   cleanlinessRating?: number;
-  staffRating?: number;
   valueRating?: number;
 }
 

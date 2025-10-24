@@ -19,8 +19,8 @@ function calculateEndTime(startTime: string, durationMinutes: number): string {
 
 // Helper function to check if slot is available
 async function isSlotAvailable(
+  prisma: any,
   salonId: string,
-  staffId: string | null,
   appointmentDate: Date,
   appointmentTime: string,
   endTime: string
@@ -54,11 +54,7 @@ async function isSlotAvailable(
     ]
   };
 
-  if (staffId) {
-    where.staffId = staffId;
-  }
-
-  const conflictingBookings = await req.prisma.booking.count({ where });
+  const conflictingBookings = await prisma.booking.count({ where });
   return conflictingBookings === 0;
 }
 
@@ -110,16 +106,6 @@ export const handleGetBookings: RequestHandler = async (req, res) => {
               name: true,
               price: true,
               durationMinutes: true
-            }
-          },
-          staff: {
-            include: {
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true
-                }
-              }
             }
           },
           review: true,
@@ -200,8 +186,8 @@ export const handleCreateBooking: RequestHandler = async (req, res) => {
 
     // Check slot availability
     const slotAvailable = await isSlotAvailable(
+      req.prisma,
       bookingData.salonId,
-      bookingData.staffId || null,
       appointmentDate,
       bookingData.appointmentTime,
       endTime
@@ -227,7 +213,6 @@ export const handleCreateBooking: RequestHandler = async (req, res) => {
         userId,
         salonId: bookingData.salonId,
         serviceId: bookingData.serviceId,
-        staffId: bookingData.staffId || null,
         appointmentDate,
         appointmentTime: bookingData.appointmentTime,
         endTime,
@@ -245,17 +230,36 @@ export const handleCreateBooking: RequestHandler = async (req, res) => {
       },
       include: {
         salon: true,
-        service: true,
-        staff: {
-          include: {
-            user: true
-          }
-        }
+        service: true
       }
     });
 
     // TODO: Send confirmation email/SMS
     // TODO: Add to queue if applicable
+
+    // Emit real-time booking events
+    const io = req.app.get('io');
+    if (io) {
+      // Emit to salon-specific room
+      io.to(`salon_${bookingData.salonId}`).emit('booking:created', {
+        booking: booking,
+        salonId: bookingData.salonId,
+        customerId: userId
+      });
+
+      // Emit to salon owners
+      io.to('salon_owners').emit('booking:created', {
+        booking: booking,
+        salonId: bookingData.salonId,
+        customerId: userId
+      });
+
+      // Emit to customer
+      io.to(`user_${userId}`).emit('booking:created', {
+        booking: booking,
+        salonId: bookingData.salonId
+      });
+    }
 
     const response: ApiResponse<Booking> = {
       success: true,
@@ -329,8 +333,7 @@ export const handleUpdateBooking: RequestHandler = async (req, res) => {
       },
       include: {
         salon: true,
-        service: true,
-        staff: true
+        service: true
       }
     });
 
@@ -339,6 +342,35 @@ export const handleUpdateBooking: RequestHandler = async (req, res) => {
       data: updatedBooking as any,
       message: "Booking updated successfully"
     };
+
+    // Emit real-time booking events
+    const io = req.app.get('io');
+    if (io) {
+      // Emit to salon-specific room
+      io.to(`salon_${booking.salonId}`).emit('booking:updated', {
+        booking: updatedBooking,
+        bookingId: bookingId,
+        salonId: booking.salonId,
+        status: status,
+        updatedBy: userId
+      });
+
+      // Emit to salon owners
+      io.to('salon_owners').emit('booking:updated', {
+        booking: updatedBooking,
+        bookingId: bookingId,
+        salonId: booking.salonId,
+        status: status,
+        updatedBy: userId
+      });
+
+      // Emit to customer
+      io.to(`user_${booking.userId}`).emit('booking:updated', {
+        booking: updatedBooking,
+        bookingId: bookingId,
+        status: status
+      });
+    }
     
     res.json(response);
   } catch (error) {
@@ -420,6 +452,33 @@ export const handleCancelBooking: RequestHandler = async (req, res) => {
 
     // TODO: Process refund if payment was made
     // TODO: Send cancellation notification
+
+    // Emit real-time booking events
+    const io = req.app.get('io');
+    if (io) {
+      // Emit to salon-specific room
+      io.to(`salon_${booking.salonId}`).emit('booking:cancelled', {
+        bookingId: bookingId,
+        salonId: booking.salonId,
+        cancelledBy: booking.userId === userId ? 'customer' : 'salon',
+        reason: reason
+      });
+
+      // Emit to salon owners
+      io.to('salon_owners').emit('booking:cancelled', {
+        bookingId: bookingId,
+        salonId: booking.salonId,
+        cancelledBy: booking.userId === userId ? 'customer' : 'salon',
+        reason: reason
+      });
+
+      // Emit to customer
+      io.to(`user_${booking.userId}`).emit('booking:cancelled', {
+        bookingId: bookingId,
+        salonId: booking.salonId,
+        reason: reason
+      });
+    }
 
     const response: ApiResponse = {
       success: true,

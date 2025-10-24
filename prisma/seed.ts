@@ -21,9 +21,6 @@ async function main() {
     await prisma.address?.deleteMany({});
     await prisma.favorite?.deleteMany({});
     await prisma.notification?.deleteMany({});
-    await prisma.staffSchedule?.deleteMany({});
-    await prisma.staffService?.deleteMany({});
-    await prisma.staff?.deleteMany({});
     await prisma.booking?.deleteMany({});
     await prisma.promotion?.deleteMany({});
     await prisma.gallery?.deleteMany({});
@@ -78,15 +75,15 @@ async function main() {
     }
   });
 
-  // Create more salon owners
+  // Create more salon owners with Gujarati names
   const owner1Password = await bcrypt.hash('owner123', 10);
   const salonOwner1 = await prisma.user.create({
     data: {
-      email: 'rajesh@stylestudio.com',
-      phone: '+919876543210',
+      email: 'rajesh@patelbeautystudio.com',
+      phone: '+917927412345',
       password: owner1Password,
       firstName: 'Rajesh',
-      lastName: 'Kumar',
+      lastName: 'Patel',
       role: 'SALON_OWNER',
       emailVerified: true,
       phoneVerified: true
@@ -96,26 +93,26 @@ async function main() {
   const owner2Password = await bcrypt.hash('owner456', 10);
   const salonOwner2 = await prisma.user.create({
     data: {
-      email: 'priya@beautylounge.com',
-      phone: '+919876543211',
+      email: 'priya@shahbeautylounge.com',
+      phone: '+917927412346',
       password: owner2Password,
       firstName: 'Priya',
-      lastName: 'Sharma',
+      lastName: 'Shah',
       role: 'SALON_OWNER',
       emailVerified: true,
       phoneVerified: true
     }
   });
 
-  // Additional salon owners
+  // Additional salon owners with Gujarati names
   const owner3Password = await bcrypt.hash('owner789', 10);
   const salonOwner3 = await prisma.user.create({
     data: {
-      email: 'vikas@groominghub.com',
-      phone: '+919876543216',
+      email: 'vikas@joshigrooming.com',
+      phone: '+917927412348',
       password: owner3Password,
       firstName: 'Vikas',
-      lastName: 'Gupta',
+      lastName: 'Joshi',
       role: 'SALON_OWNER',
       emailVerified: true,
       phoneVerified: true
@@ -125,11 +122,11 @@ async function main() {
   const owner4Password = await bcrypt.hash('owner101', 10);
   const salonOwner4 = await prisma.user.create({
     data: {
-      email: 'meera@beautysalon.com',
-      phone: '+919876543217',
+      email: 'meera@mehtabeautysalon.com',
+      phone: '+912652412349',
       password: owner4Password,
       firstName: 'Meera',
-      lastName: 'Patil',
+      lastName: 'Mehta',
       role: 'SALON_OWNER',
       emailVerified: true,
       phoneVerified: true
@@ -139,93 +136,26 @@ async function main() {
   const owner5Password = await bcrypt.hash('owner202', 10);
   const salonOwner5 = await prisma.user.create({
     data: {
-      email: 'arjun@luxurysalon.com',
-      phone: '+919876543218',
+      email: 'arjun@parmarluxury.com',
+      phone: '+912612412350',
       password: owner5Password,
       firstName: 'Arjun',
-      lastName: 'Verma',
+      lastName: 'Parmar',
       role: 'SALON_OWNER',
       emailVerified: true,
       phoneVerified: true
     }
   });
 
-  // Create staff users
-  const staff1Password = await bcrypt.hash('staff123', 10);
-  const staffUser1 = await prisma.user.create({
-    data: {
-      email: 'ravi@stylestudio.com',
-      phone: '+919876543212',
-      password: staff1Password,
-      firstName: 'Ravi',
-      lastName: 'Singh',
-      role: 'STAFF',
-      emailVerified: true
-    }
-  });
-
-  const staff2Password = await bcrypt.hash('staff456', 10);
-  const staffUser2 = await prisma.user.create({
-    data: {
-      email: 'kavita@beautylounge.com',
-      phone: '+919876543213',
-      password: staff2Password,
-      firstName: 'Kavita',
-      lastName: 'Patel',
-      role: 'STAFF',
-      emailVerified: true
-    }
-  });
-
-  // Additional staff users
-  const staff3Password = await bcrypt.hash('staff789', 10);
-  const staffUser3 = await prisma.user.create({
-    data: {
-      email: 'amit@groominghub.com',
-      phone: '+919876543219',
-      password: staff3Password,
-      firstName: 'Amit',
-      lastName: 'Sharma',
-      role: 'STAFF',
-      emailVerified: true
-    }
-  });
-
-  const staff4Password = await bcrypt.hash('staff101', 10);
-  const staffUser4 = await prisma.user.create({
-    data: {
-      email: 'priya@beautysalon.com',
-      phone: '+919876543220',
-      password: staff4Password,
-      firstName: 'Priya',
-      lastName: 'Nair',
-      role: 'STAFF',
-      emailVerified: true
-    }
-  });
-
-  const staff5Password = await bcrypt.hash('staff202', 10);
-  const staffUser5 = await prisma.user.create({
-    data: {
-      email: 'suresh@luxurysalon.com',
-      phone: '+919876543221',
-      password: staff5Password,
-      firstName: 'Suresh',
-      lastName: 'Rao',
-      role: 'STAFF',
-      emailVerified: true
-    }
-  });
-
-  // Create customers
+  // Create customers with Gujarati names
   const customer1Password = await bcrypt.hash('customer123', 10);
   const customer1 = await prisma.user.create({
     data: {
-      email: 'john@example.com',
-      phone: '+919876543214',
+      email: 'rahul@example.com',
+      phone: '+917927412353',
       password: customer1Password,
-      firstName: 'John',
-      lastName: 'Doe',
+      firstName: 'Rahul',
+      lastName: 'Patel',
       role: 'CUSTOMER',
       emailVerified: true
     }
@@ -234,11 +164,11 @@ async function main() {
   const customer2Password = await bcrypt.hash('customer456', 10);
   const customer2 = await prisma.user.create({
     data: {
-      email: 'sarah@example.com',
-      phone: '+919876543215',
+      email: 'priya@example.com',
+      phone: '+917927412354',
       password: customer2Password,
-      firstName: 'Sarah',
-      lastName: 'Wilson',
+      firstName: 'Priya',
+      lastName: 'Shah',
       role: 'CUSTOMER',
       emailVerified: true
     }
@@ -325,21 +255,21 @@ async function main() {
 
   console.log('🏪 Creating salons...');
 
-  // Create salons
+  // Create salons with Ahmedabad/Gujarat locations
   const salon1 = await prisma.salon.create({
     data: {
-      name: 'Style Studio Premium',
-      slug: 'style-studio-premium',
-      description: 'Premium hair salon with experienced stylists and modern equipment. Specializing in contemporary cuts, coloring, and styling for men and women.',
+      name: 'Patel Beauty Studio',
+      slug: 'patel-beauty-studio',
+      description: 'Premium beauty salon in the heart of Ahmedabad, specializing in traditional and modern beauty services. Expert stylists with years of experience in bridal makeup and hair styling.',
       ownerId: salonOwner1.id,
-      email: 'info@stylestudio.com',
-      phone: '+919876543210',
-      address: '123 Main Street, Koramangala',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560034',
-      latitude: 12.9352,
-      longitude: 77.6245,
+      email: 'info@patelbeautystudio.com',
+      phone: '+917927412345',
+      address: '123 CG Road, Navrangpura',
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      pincode: '380009',
+      latitude: 23.0339,
+      longitude: 72.5633,
       openingTime: '09:00',
       closingTime: '21:00',
       workingDays: [1, 2, 3, 4, 5, 6], // Mon to Sat
@@ -354,16 +284,16 @@ async function main() {
 
   const salon2 = await prisma.salon.create({
     data: {
-      name: 'Beauty Lounge',
-      slug: 'beauty-lounge',
-      description: 'Full-service beauty salon offering hair, skin, and nail treatments. Professional services with premium products and expert technicians.',
+      name: 'Shah Beauty Lounge',
+      slug: 'shah-beauty-lounge',
+      description: 'Full-service beauty salon offering hair, skin, and nail treatments in Ahmedabad. Professional services with premium products and expert technicians from Gujarat.',
       ownerId: salonOwner2.id,
-      email: 'contact@beautylounge.com',
-      phone: '+919876543211',
-      address: '456 Park Avenue, Connaught Place',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110001',
+      email: 'contact@shahbeautylounge.com',
+      phone: '+917927412346',
+      address: '456 SG Highway, Prahlad Nagar',
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      pincode: '380015',
       openingTime: '10:00',
       closingTime: '20:00',
       workingDays: [1, 2, 3, 4, 5, 6, 0], // All week
@@ -378,16 +308,16 @@ async function main() {
 
   const salon3 = await prisma.salon.create({
     data: {
-      name: 'Glamour Spa & Salon',
-      slug: 'glamour-spa-salon',
-      description: 'Luxury spa and salon experience combining traditional and modern beauty treatments. Relaxing atmosphere with expert care.',
+      name: 'Desai Spa & Salon',
+      slug: 'desai-spa-salon',
+      description: 'Luxury spa and salon experience in Gandhinagar combining traditional and modern beauty treatments. Relaxing atmosphere with expert care and authentic Gujarat hospitality.',
       ownerId: salonOwner1.id,
-      email: 'hello@glamourspa.com',
-      phone: '+919876543216',
-      address: '789 Luxury Mall, MG Road',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001',
+      email: 'hello@desaispa.com',
+      phone: '+917927412347',
+      address: '789 Sector 21, Gandhinagar',
+      city: 'Gandhinagar',
+      state: 'Gujarat',
+      pincode: '382021',
       openingTime: '08:00',
       closingTime: '22:00',
       workingDays: [0, 1, 2, 3, 4, 5, 6], // All days
@@ -400,19 +330,19 @@ async function main() {
     }
   });
 
-  // Additional salons
+  // Additional salons in Ahmedabad and Gujarat
   const salon4 = await prisma.salon.create({
     data: {
-      name: 'Grooming Hub',
-      slug: 'grooming-hub',
-      description: 'Modern grooming salon specializing in men\'s grooming services. Professional barbers with attention to detail and customer satisfaction.',
+      name: 'Joshi Grooming Hub',
+      slug: 'joshi-grooming-hub',
+      description: 'Modern grooming salon in Ahmedabad specializing in men\'s grooming services. Professional barbers with attention to detail and customer satisfaction.',
       ownerId: salonOwner3.id,
-      email: 'info@groominghub.com',
-      phone: '+919876543216',
-      address: '321 Elite Plaza, Bandra West',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400050',
+      email: 'info@joshigrooming.com',
+      phone: '+917927412348',
+      address: '321 Satellite Road, Satellite',
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      pincode: '380015',
       openingTime: '09:30',
       closingTime: '20:30',
       workingDays: [1, 2, 3, 4, 5, 6, 0], // All days
@@ -427,16 +357,16 @@ async function main() {
 
   const salon5 = await prisma.salon.create({
     data: {
-      name: 'Beauty Salon by Meera',
-      slug: 'beauty-salon-meera',
-      description: 'Intimate beauty salon offering personalized services. Specializing in bridal makeup, hair styling, and skincare treatments.',
+      name: 'Mehta Beauty Salon',
+      slug: 'mehta-beauty-salon',
+      description: 'Intimate beauty salon in Vadodara offering personalized services. Specializing in bridal makeup, hair styling, and skincare treatments with traditional Gujarat touch.',
       ownerId: salonOwner4.id,
-      email: 'meera@beautysalon.com',
-      phone: '+919876543217',
-      address: '567 Rose Garden, JP Nagar',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560078',
+      email: 'mehta@beautysalon.com',
+      phone: '+912652412349',
+      address: '567 Alkapuri, Vadodara',
+      city: 'Vadodara',
+      state: 'Gujarat',
+      pincode: '390007',
       openingTime: '10:00',
       closingTime: '19:00',
       workingDays: [1, 2, 3, 4, 5, 6], // Mon to Sat
@@ -451,16 +381,16 @@ async function main() {
 
   const salon6 = await prisma.salon.create({
     data: {
-      name: 'Luxury Salon & Spa',
-      slug: 'luxury-salon-spa',
-      description: 'High-end luxury salon and spa offering premium beauty treatments. VIP experience with personalized service and luxury products.',
+      name: 'Parmar Luxury Salon & Spa',
+      slug: 'parmar-luxury-salon-spa',
+      description: 'High-end luxury salon and spa in Ahmedabad offering premium beauty treatments. VIP experience with personalized service and luxury products. Gujarat\'s finest beauty destination.',
       ownerId: salonOwner5.id,
-      email: 'contact@luxurysalon.com',
-      phone: '+919876543218',
-      address: '999 Premium Towers, Golf Course Road',
-      city: 'Gurgaon',
-      state: 'Haryana',
-      pincode: '122001',
+      email: 'contact@parmarluxury.com',
+      phone: '+912612412350',
+      address: '999 Dumas Road, Surat',
+      city: 'Surat',
+      state: 'Gujarat',
+      pincode: '395007',
       openingTime: '09:00',
       closingTime: '21:00',
       workingDays: [1, 2, 3, 4, 5, 6, 0], // All days
@@ -475,16 +405,16 @@ async function main() {
 
   const salon7 = await prisma.salon.create({
     data: {
-      name: 'Trendy Cuts',
-      slug: 'trendy-cuts',
-      description: 'Trendy and affordable hair salon for young professionals. Latest styles and techniques with friendly atmosphere.',
+      name: 'Thakor Trendy Cuts',
+      slug: 'thakor-trendy-cuts',
+      description: 'Trendy and affordable hair salon in Rajkot for young professionals. Latest styles and techniques with friendly atmosphere and Gujarat hospitality.',
       ownerId: salonOwner3.id,
-      email: 'hello@trendycuts.com',
-      phone: '+919876543228',
-      address: '147 Youth Plaza, Lower Parel',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400013',
+      email: 'hello@thakortrendy.com',
+      phone: '+912812412351',
+      address: '147 Kalavad Road, Rajkot',
+      city: 'Rajkot',
+      state: 'Gujarat',
+      pincode: '360001',
       openingTime: '11:00',
       closingTime: '20:00',
       workingDays: [1, 2, 3, 4, 5, 6], // Mon to Sat
@@ -499,16 +429,16 @@ async function main() {
 
   const salon8 = await prisma.salon.create({
     data: {
-      name: 'Elegant Beauty Hub',
-      slug: 'elegant-beauty-hub',
-      description: 'Elegant beauty hub offering comprehensive beauty and wellness services. Professional team with years of experience.',
+      name: 'Chaudhary Elegant Beauty Hub',
+      slug: 'chaudhary-elegant-beauty-hub',
+      description: 'Elegant beauty hub in Ahmedabad offering comprehensive beauty and wellness services. Professional team with years of experience and traditional Gujarat beauty expertise.',
       ownerId: salonOwner2.id,
-      email: 'info@elegantbeauty.com',
-      phone: '+919876543229',
-      address: '852 Diamond Plaza, Rajouri Garden',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110027',
+      email: 'info@chaudharybeauty.com',
+      phone: '+917927412352',
+      address: '852 Bodakdev, Ahmedabad',
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      pincode: '380054',
       openingTime: '09:00',
       closingTime: '20:00',
       workingDays: [1, 2, 3, 4, 5, 6, 0], // All days
@@ -590,11 +520,11 @@ async function main() {
       categoryId: hairCategory.id,
       name: 'Hair Color',
       description: 'Premium hair coloring service with ammonia-free dyes',
-      price: 1500,
+      price: 1200,
       durationMinutes: 90,
       isActive: true,
       requiresDeposit: true,
-      depositAmount: 500
+      depositAmount: 400
     }
   });
 
@@ -629,12 +559,12 @@ async function main() {
       categoryId: hairCategory.id,
       name: 'Keratin Treatment',
       description: 'Advanced keratin treatment for smooth, silky hair',
-      price: 2500,
-      discountPrice: 2200,
+      price: 2000,
+      discountPrice: 1800,
       durationMinutes: 120,
       isActive: true,
       requiresDeposit: true,
-      depositAmount: 800
+      depositAmount: 600
     }
   });
 
@@ -671,11 +601,11 @@ async function main() {
       categoryId: skinCategory.id,
       name: 'Facial Treatment',
       description: 'Deep cleansing facial with massage and mask',
-      price: 1200,
+      price: 1000,
       durationMinutes: 60,
       isActive: true,
       requiresDeposit: true,
-      depositAmount: 400
+      depositAmount: 300
     }
   });
 
@@ -685,12 +615,12 @@ async function main() {
       categoryId: makeupCategory.id,
       name: 'Bridal Makeup',
       description: 'Complete bridal makeup with trial session',
-      price: 3000,
-      discountPrice: 2700,
+      price: 2500,
+      discountPrice: 2250,
       durationMinutes: 90,
       isActive: true,
       requiresDeposit: true,
-      depositAmount: 1000
+      depositAmount: 800
     }
   });
 
@@ -714,12 +644,12 @@ async function main() {
       categoryId: spaCategory.id,
       name: 'Full Body Spa',
       description: 'Relaxing full body spa treatment with aromatherapy',
-      price: 3000,
-      discountPrice: 2700,
+      price: 2500,
+      discountPrice: 2250,
       durationMinutes: 120,
       isActive: true,
       requiresDeposit: true,
-      depositAmount: 1000
+      depositAmount: 800
     }
   });
 
@@ -1120,26 +1050,32 @@ async function main() {
   console.log('Siddharth Sadhu - Email: siddharthsadhu28@gmail.com, Password: Sadhu@2006');
   console.log('Default Admin - Email: admin@bookmylook.com, Password: admin123');
   console.log('\nSalon Owners:');
-  console.log('Rajesh Kumar - Email: rajesh@stylestudio.com, Password: owner123');
-  console.log('Priya Sharma - Email: priya@beautylounge.com, Password: owner456');
-  console.log('\nStaff:');
-  console.log('Ravi Singh - Email: ravi@stylestudio.com, Password: staff123');
-  console.log('Kavita Patel - Email: kavita@beautylounge.com, Password: staff456');
+  console.log('Rajesh Patel - Email: rajesh@patelbeautystudio.com, Password: owner123');
+  console.log('Priya Shah - Email: priya@shahbeautylounge.com, Password: owner456');
+  console.log('Vikas Joshi - Email: vikas@joshigrooming.com, Password: owner789');
+  console.log('Meera Mehta - Email: meera@mehtabeautysalon.com, Password: owner101');
+  console.log('Arjun Parmar - Email: arjun@parmarluxury.com, Password: owner202');
   console.log('\nCustomers:');
-  console.log('John Doe - Email: john@example.com, Password: customer123');
-  console.log('Sarah Wilson - Email: sarah@example.com, Password: customer456');
+  console.log('Rahul Patel - Email: rahul@example.com, Password: customer123');
+  console.log('Priya Shah - Email: priya@example.com, Password: customer456');
   console.log('================================\n');
 
-  console.log('🏪 Available Salons:');
-  console.log('1. Style Studio Premium (Bangalore) - Hair services');
-  console.log('2. Beauty Lounge (Delhi) - Full beauty services');
-  console.log('3. Glamour Spa & Salon (Mumbai) - Luxury spa treatments');
-  console.log('\n✅ Ready for testing! Visit http://localhost:8080');
+  console.log('🏪 Available Salons in Gujarat:');
+  console.log('1. Patel Beauty Studio (Ahmedabad) - Premium beauty services');
+  console.log('2. Shah Beauty Lounge (Ahmedabad) - Full beauty services');
+  console.log('3. Desai Spa & Salon (Gandhinagar) - Luxury spa treatments');
+  console.log('4. Joshi Grooming Hub (Ahmedabad) - Men\'s grooming services');
+  console.log('5. Mehta Beauty Salon (Vadodara) - Personalized bridal services');
+  console.log('6. Parmar Luxury Salon & Spa (Surat) - High-end beauty treatments');
+  console.log('7. Thakor Trendy Cuts (Rajkot) - Affordable hair services');
+  console.log('8. Chaudhary Elegant Beauty Hub (Ahmedabad) - Comprehensive beauty services');
+
+  console.log('✅ Ready for testing in Gujarat! Visit http://localhost:8080');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error seeding database:', e);
+    console.error('❌ Database seeding failed:', e);
     process.exit(1);
   })
   .finally(async () => {

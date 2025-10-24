@@ -16,26 +16,37 @@ import { AnimatePresence, motion } from "framer-motion";
 import SiteLayout from "./layouts/SiteLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
-import Index from "./pages/Index";
-import Services from "./pages/Services";
-import Booking from "./pages/Booking";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import CustomerDashboard from "./pages/CustomerDashboard";
-import OwnerDashboard from "./pages/OwnerDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ResetPassword from "./pages/ResetPassword";
-import Profile from "./pages/Profile";
-import Reviews from "./pages/Reviews";
-import Help from "./pages/Help";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import Estimate from "./pages/Estimate";
-import SalonDetails from "./pages/SalonDetails";
-import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
+
+// Lazy load components for better performance
+import { lazy, Suspense } from "react";
+
+const Index = lazy(() => import("./pages/Index"));
+const Services = lazy(() => import("./pages/Services"));
+const Booking = lazy(() => import("./pages/Booking"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
+const OwnerDashboard = lazy(() => import("./pages/OwnerDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Reviews = lazy(() => import("./pages/Reviews"));
+const Help = lazy(() => import("./pages/Help"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Estimate = lazy(() => import("./pages/Estimate"));
+const SalonDetails = lazy(() => import("./pages/SalonDetails"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Loading component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -45,59 +56,59 @@ function RouterWithTransitions(){
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         {/* Public Pages */}
-        <Route path="/" element={<SiteLayout><Page><Index /></Page></SiteLayout>} />
-        <Route path="/services" element={<SiteLayout><Page><Services /></Page></SiteLayout>} />
-        <Route path="/salon/:slug" element={<SiteLayout><Page><ErrorBoundary><SalonDetails /></ErrorBoundary></Page></SiteLayout>} />
-        <Route path="/about" element={<SiteLayout><Page><About /></Page></SiteLayout>} />
-        <Route path="/booking" element={<SiteLayout><Page><Booking /></Page></SiteLayout>} />
-        <Route path="/contact" element={<SiteLayout><Page><Contact /></Page></SiteLayout>} />
-        <Route path="/reviews" element={<SiteLayout><Page><Reviews /></Page></SiteLayout>} />
-        <Route path="/help" element={<SiteLayout><Page><Help /></Page></SiteLayout>} />
-        <Route path="/terms" element={<SiteLayout><Page><Terms /></Page></SiteLayout>} />
-        <Route path="/privacy" element={<SiteLayout><Page><Privacy /></Page></SiteLayout>} />
-        <Route path="/estimate" element={<SiteLayout><Page><Estimate /></Page></SiteLayout>} />
+        <Route path="/" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Index /></Suspense></Page></SiteLayout>} />
+        <Route path="/services" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Services /></Suspense></Page></SiteLayout>} />
+        <Route path="/salon/:slug" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><ErrorBoundary><SalonDetails /></ErrorBoundary></Suspense></Page></SiteLayout>} />
+        <Route path="/about" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><About /></Suspense></Page></SiteLayout>} />
+        <Route path="/booking" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Booking /></Suspense></Page></SiteLayout>} />
+        <Route path="/contact" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Contact /></Suspense></Page></SiteLayout>} />
+        <Route path="/reviews" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Reviews /></Suspense></Page></SiteLayout>} />
+        <Route path="/help" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Help /></Suspense></Page></SiteLayout>} />
+        <Route path="/terms" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Terms /></Suspense></Page></SiteLayout>} />
+        <Route path="/privacy" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Privacy /></Suspense></Page></SiteLayout>} />
+        <Route path="/estimate" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Estimate /></Suspense></Page></SiteLayout>} />
         
         {/* Authentication Pages */}
         <Route path="/login" element={
           <ProtectedRoute requireAuth={false}>
-            <Login />
+            <Suspense fallback={<PageLoader />}><Login /></Suspense>
           </ProtectedRoute>
         } />
         <Route path="/register" element={
           <ProtectedRoute requireAuth={false}>
-            <Register />
+            <Suspense fallback={<PageLoader />}><Register /></Suspense>
           </ProtectedRoute>
         } />
         <Route path="/reset-password" element={
           <ProtectedRoute requireAuth={false}>
-            <ResetPassword />
+            <Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>
           </ProtectedRoute>
         } />
         
         {/* Dashboard Pages */}
         <Route path="/dashboard/customer" element={
           <ProtectedRoute allowedRoles={['CUSTOMER']}>
-            <SiteLayout><Page><CustomerDashboard /></Page></SiteLayout>
+            <SiteLayout><Page><Suspense fallback={<PageLoader />}><CustomerDashboard /></Suspense></Page></SiteLayout>
           </ProtectedRoute>
         } />
         <Route path="/dashboard/owner" element={
           <ProtectedRoute allowedRoles={['SALON_OWNER']}>
-            <SiteLayout><Page><OwnerDashboard /></Page></SiteLayout>
+            <SiteLayout><Page><Suspense fallback={<PageLoader />}><OwnerDashboard /></Suspense></Page></SiteLayout>
           </ProtectedRoute>
         } />
         <Route path="/dashboard/admin" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
-            <SiteLayout><Page><AdminDashboard /></Page></SiteLayout>
+            <SiteLayout><Page><Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense></Page></SiteLayout>
           </ProtectedRoute>
         } />
         <Route path="/profile" element={
           <ProtectedRoute>
-            <SiteLayout><Page><Profile /></Page></SiteLayout>
+            <SiteLayout><Page><Suspense fallback={<PageLoader />}><Profile /></Suspense></Page></SiteLayout>
           </ProtectedRoute>
         } />
         
         {/* 404 Page */}
-        <Route path="*" element={<SiteLayout><NotFound /></SiteLayout>} />
+        <Route path="*" element={<SiteLayout><Suspense fallback={<PageLoader />}><NotFound /></Suspense></SiteLayout>} />
       </Routes>
     </AnimatePresence>
   );
@@ -126,7 +137,9 @@ const App = () => (
                   v7_relativeSplatPath: true,
                 }}>
                   <ScrollToTop />
-                  <RouterWithTransitions />
+                  <ErrorBoundary>
+                    <RouterWithTransitions />
+                  </ErrorBoundary>
                 </BrowserRouter>
               </I18nProvider>
             </TooltipProvider>

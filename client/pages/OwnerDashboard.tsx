@@ -28,7 +28,6 @@ interface SalonAnalytics {
   topServices: Array<{ name: string; count: number; revenue: number }>;
   peakHours: Array<{ hour: string; customers: number }>;
   weeklyRevenue: Array<{ day: string; amount: number }>;
-  staffPerformance: Array<{ name: string; services: number; rating: number; revenue: number }>;
 }
 
 interface QueueItem {
@@ -53,18 +52,6 @@ interface Service {
   popularity: number;
 }
 
-interface Staff {
-  barber_id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone_number: string;
-  is_available: boolean;
-  specialization: string[];
-  rating: number;
-  services_completed: number;
-}
-
 interface Notification {
   id: string;
   type: 'queue' | 'review' | 'system' | 'urgent';
@@ -79,7 +66,6 @@ export default function OwnerDashboard() {
   const { getQueueForSalon, updateQueueEntry, refreshQueue } = useQueue();
   const { subscribeToSalon, unsubscribeFromSalon, isConnected } = useRealTime();
   const [services, setServices] = useState<Service[]>([]);
-  const [staff, setStaff] = useState<Staff[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentSalonId, setCurrentSalonId] = useState('salon_gentleman_zone');
@@ -190,42 +176,6 @@ export default function OwnerDashboard() {
         }
       ]);
 
-      setStaff([
-        {
-          barber_id: 1,
-          first_name: "Rajesh",
-          last_name: "Kumar",
-          email: "rajesh.kumar@gentlemenszone.com",
-          phone_number: "+91 98765 43210",
-          is_available: true,
-          specialization: ["Hair Cut", "Styling"],
-          rating: 4.9,
-          services_completed: 234
-        },
-        {
-          barber_id: 2,
-          first_name: "Amit",
-          last_name: "Sharma",
-          email: "amit.sharma@gentlemenszone.com",
-          phone_number: "+91 98765 43211",
-          is_available: true,
-          specialization: ["Beard Grooming", "Facial"],
-          rating: 4.7,
-          services_completed: 189
-        },
-        {
-          barber_id: 3,
-          first_name: "Priya",
-          last_name: "Singh",
-          email: "priya.singh@gentlemenszone.com",
-          phone_number: "+91 98765 43212",
-          is_available: false,
-          specialization: ["Hair Color", "Treatment"],
-          rating: 4.8,
-          services_completed: 156
-        }
-      ]);
-
       setAnalytics({
         totalRevenue: 245000,
         monthlyRevenue: 18500,
@@ -256,11 +206,6 @@ export default function OwnerDashboard() {
           { day: "Fri", amount: 5200 },
           { day: "Sat", amount: 6800 },
           { day: "Sun", amount: 2900 }
-        ],
-        staffPerformance: [
-          { name: "Rajesh Kumar", services: 234, rating: 4.9, revenue: 82300 },
-          { name: "Amit Sharma", services: 189, rating: 4.7, revenue: 67200 },
-          { name: "Priya Singh", services: 156, rating: 4.8, revenue: 65400 }
         ]
       });
 
@@ -509,13 +454,12 @@ export default function OwnerDashboard() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-8">
-        <TabsList className="grid w-full grid-cols-6 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 p-1 rounded-xl shadow-lg border border-slate-200">
-          <TabsTrigger value="overview" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">Overview</TabsTrigger>
-          <TabsTrigger value="queue" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">Queue</TabsTrigger>
-          <TabsTrigger value="analytics" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">Analytics</TabsTrigger>
-          <TabsTrigger value="staff" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-600 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">Staff</TabsTrigger>
-          <TabsTrigger value="services" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">Services</TabsTrigger>
-          <TabsTrigger value="notifications" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300">Alerts</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 p-1 rounded-xl shadow-lg border border-slate-200 h-auto">
+          <TabsTrigger value="overview" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 text-xs md:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="queue" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 text-xs md:text-sm">Queue</TabsTrigger>
+          <TabsTrigger value="analytics" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 text-xs md:text-sm">Analytics</TabsTrigger>
+          <TabsTrigger value="services" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 text-xs md:text-sm">Services</TabsTrigger>
+          <TabsTrigger value="notifications" className="rounded-lg font-semibold text-slate-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 text-xs md:text-sm">Alerts</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -562,31 +506,31 @@ export default function OwnerDashboard() {
               </CardContent>
             </Card>
 
-            {/* Staff Availability */}
+            {/* Top Performing Services */}
             <Card className="shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/30 to-white backdrop-blur-sm hover:shadow-2xl transition-all duration-500 ring-1 ring-slate-200/50 hover:ring-slate-300/70">
-              <CardHeader className="bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 border-b border-slate-100">
+              <CardHeader className="bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 border-b border-slate-100">
                 <CardTitle className="flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-green-600" />
-                  Staff Availability
+                  <Award className="h-5 w-5 text-purple-600" />
+                  Top Performing Services
                 </CardTitle>
-                <CardDescription>Current team status and availability</CardDescription>
+                <CardDescription>Your most popular and profitable services this month</CardDescription>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {staff.map((member, index) => (
-                    <div key={member.barber_id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${member.is_available ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  {analytics?.topServices.map((service, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                      <div className="flex items-center gap-4">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {index + 1}
+                        </div>
                         <div>
-                          <div className="font-medium text-sm">{member.first_name} {member.last_name}</div>
-                          <div className="text-xs text-slate-600">{member.services_completed} services today</div>
+                          <div className="font-semibold">{service.name}</div>
+                          <div className="text-sm text-slate-600">{service.count} customers</div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xs font-medium">{member.rating}</span>
-                        </div>
+                        <div className="font-bold text-lg">₹{service.revenue.toLocaleString()}</div>
+                        <div className="text-xs text-slate-500">Revenue</div>
                       </div>
                     </div>
                   ))}
@@ -594,38 +538,6 @@ export default function OwnerDashboard() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Top Performing Services */}
-          <Card className="shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/30 to-white backdrop-blur-sm hover:shadow-2xl transition-all duration-500 ring-1 ring-slate-200/50 hover:ring-slate-300/70">
-            <CardHeader className="bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 border-b border-slate-100">
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-purple-600" />
-                Top Performing Services
-              </CardTitle>
-              <CardDescription>Your most popular and profitable services this month</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {analytics?.topServices.map((service, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg border">
-                    <div className="flex items-center gap-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="font-semibold">{service.name}</div>
-                        <div className="text-sm text-slate-600">{service.count} customers</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg">₹{service.revenue.toLocaleString()}</div>
-                      <div className="text-xs text-slate-500">Revenue</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Queue Management Tab */}
@@ -650,7 +562,7 @@ export default function OwnerDashboard() {
           </div>
 
           {/* Queue Stats */}
-          <div className="grid gap-4 md:grid-cols-4 mb-6">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4 mb-6">
             <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -699,8 +611,8 @@ export default function OwnerDashboard() {
                 transition={{ delay: index * 0.05 }}
                 className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow duration-300"
               >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg border-2 ${
                         item.status === 'WAITING' ? 'bg-orange-100 border-orange-300 text-orange-700' :
@@ -709,23 +621,25 @@ export default function OwnerDashboard() {
                       }`}>
                         {item.position}
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-lg text-slate-800">{item.customerName}</h3>
-                        <p className="text-slate-600">{item.serviceName}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-slate-600">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-lg text-slate-800 truncate">{item.customerName}</h3>
+                        <p className="text-slate-600 truncate">{item.serviceName}</p>
+                        <div className="flex items-center gap-2 md:gap-4 mt-2 text-sm text-slate-600">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {item.estimatedTime}
+                            <span className="hidden sm:inline">{item.estimatedTime}</span>
+                            <span className="sm:hidden">Wait: {item.estimatedWaitMinutes}m</span>
                           </span>
                           <span className="flex items-center gap-1">
                             <Phone className="h-3 w-3" />
-                            {item.customerPhone}
+                            <span className="hidden md:inline">{item.customerPhone}</span>
+                            <span className="md:hidden">***{item.customerPhone.slice(-4)}</span>
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
                       <Badge variant={
                         item.status === 'WAITING' ? 'secondary' :
                         item.status === 'IN_SERVICE' ? 'default' :
@@ -747,7 +661,8 @@ export default function OwnerDashboard() {
                             onClick={() => handleNextCustomer(item.id)}
                             className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.03] transition-all duration-300 border-0 ring-1 ring-emerald-400/30"
                           >
-                            Next
+                            <span className="hidden sm:inline">Next</span>
+                            <span className="sm:hidden">Start</span>
                           </Button>
                         )}
                         {item.status === 'IN_SERVICE' && (
@@ -887,152 +802,6 @@ export default function OwnerDashboard() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Staff Performance */}
-          <Card className="shadow-xl border-0 bg-gradient-to-br from-white via-slate-50/30 to-white backdrop-blur-sm hover:shadow-2xl transition-all duration-500 ring-1 ring-slate-200/50 hover:ring-slate-300/70">
-            <CardHeader className="bg-gradient-to-r from-orange-50 via-yellow-50 to-orange-50 border-b border-slate-100">
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-orange-600" />
-                Staff Performance Dashboard
-              </CardTitle>
-              <CardDescription>Individual team member performance metrics</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {analytics?.staffPerformance.map((member, index) => (
-                  <div key={index} className="bg-white rounded-lg p-4 border">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center text-white font-bold">
-                          {member.name.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-slate-800">{member.name}</div>
-                          <div className="text-sm text-slate-600">{member.services} services completed</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-1 mb-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-semibold">{member.rating}</span>
-                        </div>
-                        <div className="text-sm text-slate-600">Rating</div>
-                      </div>
-                    </div>
-                    <div className="bg-slate-100 rounded-full h-2 mb-2">
-                      <div
-                        className="bg-gradient-to-r from-orange-500 to-yellow-500 h-2 rounded-full"
-                        style={{ width: `${(member.services / Math.max(...analytics.staffPerformance.map(m => m.services))) * 100}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">Revenue Generated</span>
-                      <span className="font-bold text-slate-800">₹{member.revenue.toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Staff Management Tab */}
-        <TabsContent value="staff" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg">
-                <UserCheck className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800">Staff Management</h2>
-                <p className="text-slate-600">Manage your team, schedules, and performance</p>
-              </div>
-            </div>
-            <Button className="bg-gradient-to-r from-rose-600 via-pink-600 to-red-600 hover:from-rose-700 hover:via-pink-700 hover:to-red-700 text-white font-bold shadow-xl hover:shadow-2xl transform hover:scale-[1.05] transition-all duration-300 border-0 ring-2 ring-rose-500/20 hover:ring-rose-400/40">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Staff Member
-            </Button>
-          </div>
-
-          <div className="grid gap-6">
-            {staff.map((member, index) => (
-              <motion.div
-                key={member.barber_id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow duration-300"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                        {member.first_name.charAt(0)}{member.last_name.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-bold text-slate-800">
-                            {member.first_name} {member.last_name}
-                          </h3>
-                          <Badge variant={member.is_available ? "default" : "secondary"} className={
-                            member.is_available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                          }>
-                            {member.is_available ? "Available" : "Busy"}
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-3">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-4 w-4 text-slate-500" />
-                            <span className="text-slate-600">{member.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Phone className="h-4 w-4 text-slate-500" />
-                            <span className="text-slate-600">{member.phone_number}</span>
-                          </div>
-                        </div>
-
-                        <div className="mb-3">
-                          <div className="text-sm font-medium text-slate-700 mb-1">Specializations</div>
-                          <div className="flex flex-wrap gap-2">
-                            {member.specialization.map((spec, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs">
-                                {spec}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 text-sm">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">{member.rating}</span>
-                            <span className="text-slate-600">rating</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                            <span className="font-medium">{member.services_completed}</span>
-                            <span className="text-slate-600">services</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="border-2 border-blue-300 bg-blue-50/50 hover:bg-blue-100 hover:border-blue-500 text-blue-700 hover:text-blue-800 font-semibold shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-300">
-                        <Calendar className="mr-1 h-3 w-3" />
-                        Schedule
-                      </Button>
-                      <Button size="sm" variant="outline" className="border-2 border-slate-300 bg-slate-50/50 hover:bg-slate-100 hover:border-slate-500 text-slate-700 hover:text-slate-800 font-semibold shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-300">
-                        <Edit className="mr-1 h-3 w-3" />
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </motion.div>
-            ))}
           </div>
         </TabsContent>
 
