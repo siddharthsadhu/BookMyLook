@@ -1,11 +1,9 @@
 import { motion } from "framer-motion";
-import { useI18n } from "@/i18n";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, Target, Zap, Shield, Heart, Star, Award, Sparkles } from "lucide-react";
 
 export default function About() {
-  const { t } = useI18n();
 
   const features = [
     {

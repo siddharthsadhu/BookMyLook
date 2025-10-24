@@ -1,0 +1,1 @@
+    errors.push('Please provide either an email address or phone number to log in');

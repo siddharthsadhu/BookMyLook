@@ -2,7 +2,7 @@ import { Button, ButtonProps } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { forwardRef } from "react";
 
-const MotionButton = motion(Button as any);
+const MotionButton = motion.create(Button as any);
 
 const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps & {glow?: boolean}>(
   ({ children, glow = true, ...props }, ref) => {

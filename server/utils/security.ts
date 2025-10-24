@@ -39,13 +39,17 @@ export const registrationRateLimit = rateLimit({
 
 export const generalRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  max: 1000, // Increased from 100 to 1000 for development testing
   message: {
     success: false,
     error: 'Too many requests. Please try again later.'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: (req, res) => {
+    // Skip rate limiting for development/testing - remove in production
+    return process.env.NODE_ENV !== 'production';
+  }
 });
 
 // Password security utilities

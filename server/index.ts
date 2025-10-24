@@ -39,7 +39,8 @@ import {
   handleRefreshToken,
   handleLogout,
   handleRequestPasswordReset,
-  handleResetPassword
+  handleResetPassword,
+  handleGetCurrentUser
 } from "./routes/auth";
 import { handlePartnershipInquiry } from "./routes/partnerships";
 import { handleSeedAdmin } from "./routes/admin";
@@ -278,7 +279,7 @@ export function createServer() {
   app.post("/api/auth/login", authRateLimit, handleLogin);
   app.post("/api/auth/refresh", authRateLimit, handleRefreshToken);
   app.post("/api/auth/logout", handleLogout);
-  // app.get("/api/auth/me", authenticateToken, handleGetCurrentUser); // TODO: Implement this endpoint
+  app.get("/api/auth/me", authenticateToken, handleGetCurrentUser);
   app.post("/api/auth/forgot-password", authRateLimit, handleRequestPasswordReset);
   app.post("/api/auth/reset-password", authRateLimit, handleResetPassword);
   

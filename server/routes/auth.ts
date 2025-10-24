@@ -296,6 +296,42 @@ export const handleLogout = asyncHandler(async (req, res) => {
   ErrorResponse.success(res, null, "Logged out successfully");
 });
 
+// Get current user information (for remember me functionality)
+export const handleGetCurrentUser = asyncHandler(async (req, res) => {
+  // The user should already be authenticated via the authenticateToken middleware
+  // req.user is set by the middleware with userId, email, and role
+
+  if (!req.user || !req.user.userId) {
+    throw new AuthenticationError("Authentication required");
+  }
+
+  // Fetch the complete user data from database
+  const user = await req.prisma.user.findUnique({
+    where: { id: req.user.userId },
+    select: {
+      id: true,
+      email: true,
+      phone: true,
+      firstName: true,
+      lastName: true,
+      avatar: true,
+      role: true,
+      emailVerified: true,
+      phoneVerified: true,
+      isActive: true,
+      lastLogin: true,
+      createdAt: true,
+      updatedAt: true
+    }
+  });
+
+  if (!user || !user.isActive) {
+    throw new NotFoundError("User not found or inactive");
+  }
+
+  ErrorResponse.success(res, user, "User information retrieved successfully");
+});
+
 // Phone login
 export const handlePhoneLogin: RequestHandler = async (req, res) => {
   try {

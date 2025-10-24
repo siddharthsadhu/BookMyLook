@@ -4,7 +4,7 @@ import { User, LoginRequest, RegisterRequest, ApiResponse } from '@shared/api';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (credentials: LoginRequest) => Promise<{ success: boolean; error?: string }>;
+  login: (credentials: LoginRequest & { rememberMe?: boolean }) => Promise<{ success: boolean; error?: string }>;
   register: (userData: RegisterRequest) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -17,70 +17,61 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Simple storage keys
+const TOKEN_KEY = 'bookmylook_token';
+const REFRESH_KEY = 'bookmylook_refresh';
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing session on mount
+  // Check authentication on app load
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      const token = localStorage.getItem('bookmylook_token');
-      const rememberMe = localStorage.getItem('bookmylook_remember');
-      const rememberUntil = localStorage.getItem('bookmylook_remember_until');
+    const checkAuth = async () => {
+      const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
 
-      // Check if we have a remember me session that's still valid
-      if (rememberMe === 'true' && rememberUntil) {
-        const rememberUntilDate = parseInt(rememberUntil);
-        if (Date.now() > rememberUntilDate) {
-          // Remember me session expired, clean up
-          localStorage.removeItem('bookmylook_remember');
-          localStorage.removeItem('bookmylook_remember_until');
-          localStorage.removeItem('bookmylook_token');
-          localStorage.removeItem('bookmylook_refresh_token');
-          setIsLoading(false);
-          return;
-        }
+      if (!token) {
+        setIsLoading(false);
+        return;
       }
 
-      if (token) {
-        try {
-          const response = await fetch('http://localhost:3001/api/auth/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          const data: ApiResponse = await response.json();
-
-          if (data.success && data.data) {
-            setUser(data.data as User);
-          } else {
-            // Token invalid, clear it
-            localStorage.removeItem('bookmylook_token');
-            localStorage.removeItem('bookmylook_refresh_token');
-            // Don't clear remember me settings unless the session has expired
-            if (rememberMe !== 'true' || (rememberUntil && Date.now() > parseInt(rememberUntil))) {
-              localStorage.removeItem('bookmylook_remember');
-              localStorage.removeItem('bookmylook_remember_until');
-            }
+      try {
+        const response = await fetch('http://localhost:8080/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
-        } catch (error) {
-          console.error('Auth check failed:', error);
-          localStorage.removeItem('bookmylook_token');
-          localStorage.removeItem('bookmylook_refresh_token');
-          // Keep remember me settings for retry
+        });
+
+        const data: ApiResponse = await response.json();
+
+        if (data.success && data.data) {
+          setUser(data.data as User);
+        } else {
+          // Clear invalid tokens
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(REFRESH_KEY);
+          sessionStorage.removeItem(TOKEN_KEY);
+          sessionStorage.removeItem(REFRESH_KEY);
         }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        // Clear tokens on error
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(REFRESH_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(REFRESH_KEY);
       }
+
       setIsLoading(false);
     };
 
-    checkAuthStatus();
+    checkAuth();
   }, []);
 
   const login = async (credentials: LoginRequest & { rememberMe?: boolean }): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -94,17 +85,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { user: userData, accessToken, refreshToken } = data.data as any;
         setUser(userData);
 
-        // Store tokens
-        localStorage.setItem('bookmylook_token', accessToken);
-        localStorage.setItem('bookmylook_refresh_token', refreshToken);
-
-        // Store remember me preference for session management
+        // Store based on Remember Me preference
         if (credentials.rememberMe) {
-          localStorage.setItem('bookmylook_remember', 'true');
-          localStorage.setItem('bookmylook_remember_until', String(Date.now() + (30 * 24 * 60 * 60 * 1000))); // 30 days
+          localStorage.setItem(TOKEN_KEY, accessToken);
+          localStorage.setItem(REFRESH_KEY, refreshToken);
         } else {
-          localStorage.removeItem('bookmylook_remember');
-          localStorage.removeItem('bookmylook_remember_until');
+          sessionStorage.setItem(TOKEN_KEY, accessToken);
+          sessionStorage.setItem(REFRESH_KEY, refreshToken);
         }
 
         return { success: true };
@@ -119,7 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (userData: RegisterRequest): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('http://localhost:3001/api/auth/register', {
+      const response = await fetch('http://localhost:8080/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -133,9 +120,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { user: userData, accessToken, refreshToken } = data.data as any;
         setUser(userData);
 
-        // Store tokens
-        localStorage.setItem('bookmylook_token', accessToken);
-        localStorage.setItem('bookmylook_refresh_token', refreshToken);
+        // New registrations don't remember by default
+        sessionStorage.setItem(TOKEN_KEY, accessToken);
+        sessionStorage.setItem(REFRESH_KEY, refreshToken);
 
         return { success: true };
       } else {
@@ -149,33 +136,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      // Call logout endpoint
-      await fetch('http://localhost:3001/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('bookmylook_token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+      if (token) {
+        await fetch('http://localhost:8080/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
-      // Clear local state and storage regardless of API call result
       setUser(null);
-      localStorage.removeItem('bookmylook_token');
-      localStorage.removeItem('bookmylook_refresh_token');
-      // Clear remember me settings on logout
-      localStorage.removeItem('bookmylook_remember');
-      localStorage.removeItem('bookmylook_remember_until');
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(REFRESH_KEY);
     }
   };
 
   const refreshUser = async (): Promise<void> => {
-    const token = localStorage.getItem('bookmylook_token');
+    const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/me', {
+      const response = await fetch('http://localhost:8080/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -187,7 +174,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (data.success && data.data) {
         setUser(data.data as User);
       } else {
-        // Token invalid
         await logout();
       }
     } catch (error) {

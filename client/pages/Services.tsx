@@ -555,10 +555,10 @@ export default function Services() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setSelectedSalon(selectedSalon === salon.id ? null : salon.id)}
-                        className="bg-white/80 backdrop-blur-sm hover:bg-white/90 text-slate-700 font-semibold shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-300 border border-slate-200/60 hover:border-slate-300/80 ring-1 ring-white/20 hover:ring-slate-200/40"
+                        onClick={() => navigate(`/salon/${salon.slug}`)}
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:text-accent-foreground h-9 rounded-md px-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 hover:text-blue-800 font-semibold shadow-sm hover:shadow-md transform hover:scale-[1.02] transition-all duration-300 border border-blue-200/60 hover:border-blue-300/80 ring-1 ring-blue-100/50 hover:ring-blue-200/60"
                       >
-                        {selectedSalon === salon.id ? 'Show Less' : 'View Details'}
+                        View Details
                       </Button>
                     </div>
                   </CardContent>

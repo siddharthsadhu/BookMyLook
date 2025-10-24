@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { useI18n } from "@/i18n";
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Mail, Phone, MapPin, Clock, MessageSquare, Send } from "lucide-react";
 
 export default function Contact() {
-  const { t } = useI18n();
   const [formData, setFormData] = useState({
     name: '',
     email: '',

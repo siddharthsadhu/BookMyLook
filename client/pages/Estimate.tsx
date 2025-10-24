@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { useI18n } from "@/i18n";
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,6 @@ interface EstimateResult {
 }
 
 export default function Estimate() {
-  const { t } = useI18n();
   const navigate = useNavigate();
   const { getQueueForSalon, getQueueStats } = useQueue();
 

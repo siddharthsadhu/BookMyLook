@@ -4,108 +4,118 @@ import { ApiResponse, Service, ServiceCategory } from "@shared/api";
 // Get services for a specific salon or all services
 export const handleServices: RequestHandler = async (req, res) => {
   try {
-    // Mock services data
-    const mockServices = [
-      {
-        id: 's1',
-        salonId: '1',
-        name: 'Hair Cut',
-        description: 'Professional hair cutting service',
-        category: {
-          id: 'cat1',
-          name: 'Hair Services',
-          slug: 'hair-services',
-          description: 'All hair related services',
-          icon: null
+    const { salonId, categoryId, page = 1, limit = 20, search } = req.query;
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 20;
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build where clause
+    const where: any = {
+      isActive: true
+    };
+
+    if (salonId) {
+      where.salonId = salonId as string;
+    }
+
+    if (categoryId) {
+      where.categoryId = categoryId as string;
+    }
+
+    if (search) {
+      where.OR = [
+        {
+          name: {
+            contains: search as string,
+            mode: 'insensitive'
+          }
         },
-        categoryId: 'cat1',
-        price: 300,
-        discountPrice: null,
-        durationMinutes: 45,
-        isActive: true,
-        requiresDeposit: false,
-        depositAmount: null,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-        salon: {
-          id: '1',
-          name: 'StyleMaster Salon',
-          slug: 'stylemaster-salon',
-          city: 'Bangalore',
-          averageRating: 4.5
+        {
+          description: {
+            contains: search as string,
+            mode: 'insensitive'
+          }
+        }
+      ];
+    }
+
+    // Fetch services with salon and category info
+    const [services, total] = await Promise.all([
+      req.prisma.service.findMany({
+        where,
+        include: {
+          salon: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              city: true,
+              averageRating: true,
+              totalReviews: true
+            }
+          },
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              description: true,
+              icon: true
+            }
+          },
+          _count: {
+            select: {
+              bookings: true
+            }
+          }
         },
-        _count: { bookings: 25 }
+        orderBy: { price: 'asc' },
+        skip,
+        take: limitNum
+      }),
+      req.prisma.service.count({ where })
+    ]);
+
+    // Transform data to match frontend expectations
+    const transformedServices = services.map(service => ({
+      id: service.id,
+      salonId: service.salonId,
+      name: service.name,
+      description: service.description,
+      category: {
+        id: service.category.id,
+        name: service.category.name,
+        slug: service.category.slug,
+        description: service.category.description,
+        icon: service.category.icon
       },
-      {
-        id: 's2',
-        salonId: '1',
-        name: 'Beard Styling',
-        description: 'Expert beard grooming',
-        category: {
-          id: 'cat1',
-          name: 'Hair Services',
-          slug: 'hair-services',
-          description: 'All hair related services',
-          icon: null
-        },
-        categoryId: 'cat1',
-        price: 150,
-        discountPrice: null,
-        durationMinutes: 30,
-        isActive: true,
-        requiresDeposit: false,
-        depositAmount: null,
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-        salon: {
-          id: '1',
-          name: 'StyleMaster Salon',
-          slug: 'stylemaster-salon',
-          city: 'Bangalore',
-          averageRating: 4.5
-        },
-        _count: { bookings: 18 }
+      categoryId: service.categoryId,
+      price: service.price,
+      discountPrice: service.discountPrice,
+      durationMinutes: service.durationMinutes,
+      isActive: service.isActive,
+      requiresDeposit: service.requiresDeposit,
+      depositAmount: service.depositAmount,
+      createdAt: service.createdAt,
+      updatedAt: service.updatedAt,
+      salon: {
+        id: service.salon.id,
+        name: service.salon.name,
+        slug: service.salon.slug,
+        city: service.salon.city,
+        averageRating: service.salon.averageRating
       },
-      {
-        id: 's3',
-        salonId: '2',
-        name: 'Facial',
-        description: 'Complete facial treatment',
-        category: {
-          id: 'cat2',
-          name: 'Beauty Services',
-          slug: 'beauty-services',
-          description: 'Beauty and skincare services',
-          icon: null
-        },
-        categoryId: 'cat2',
-        price: 500,
-        discountPrice: null,
-        durationMinutes: 60,
-        isActive: true,
-        requiresDeposit: false,
-        depositAmount: null,
-        createdAt: new Date('2024-02-01'),
-        updatedAt: new Date('2024-02-01'),
-        salon: {
-          id: '2',
-          name: 'Beauty Bliss',
-          slug: 'beauty-bliss',
-          city: 'Bangalore',
-          averageRating: 4.2
-        },
-        _count: { bookings: 12 }
-      }
-    ];
+      _count: { bookings: service._count.bookings }
+    }));
 
     const response: ApiResponse = {
       success: true,
-      data: mockServices,
+      data: transformedServices,
       meta: {
-        page: 1,
-        limit: 50,
-        total: mockServices.length,
-        totalPages: 1
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum)
       }
     };
 
@@ -114,7 +124,7 @@ export const handleServices: RequestHandler = async (req, res) => {
     console.error('Error fetching services:', error);
     const response: ApiResponse = {
       success: false,
-      error: "Failed to fetch services"
+      error: `Failed to fetch services: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
     res.status(500).json(response);
   }
@@ -123,28 +133,30 @@ export const handleServices: RequestHandler = async (req, res) => {
 // Get all service categories
 export const handleServiceCategories: RequestHandler = async (req, res) => {
   try {
-    const mockCategories = [
-      {
-        id: 'cat1',
-        name: 'Hair Services',
-        slug: 'hair-services',
-        description: 'All hair related services',
-        icon: null,
-        _count: { services: 2 }
+    const categories = await req.prisma.serviceCategory.findMany({
+      include: {
+        _count: {
+          select: {
+            services: true
+          }
+        }
       },
-      {
-        id: 'cat2',
-        name: 'Beauty Services',
-        slug: 'beauty-services',
-        description: 'Beauty and skincare services',
-        icon: null,
-        _count: { services: 1 }
-      }
-    ];
+      orderBy: { name: 'asc' }
+    });
+
+    // Transform to match frontend expectations
+    const transformedCategories = categories.map(category => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      icon: category.icon,
+      _count: { services: category._count.services }
+    }));
 
     const response: ApiResponse = {
       success: true,
-      data: mockCategories
+      data: transformedCategories
     };
 
     res.json(response);
@@ -152,7 +164,7 @@ export const handleServiceCategories: RequestHandler = async (req, res) => {
     console.error('Error fetching categories:', error);
     const response: ApiResponse = {
       success: false,
-      error: "Failed to fetch service categories"
+      error: `Failed to fetch service categories: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
     res.status(500).json(response);
   }
@@ -162,25 +174,15 @@ export const handleServiceCategories: RequestHandler = async (req, res) => {
 export const handleServicesByCategory: RequestHandler = async (req, res) => {
   try {
     const { categorySlug } = req.params;
+    const { page = 1, limit = 20, city } = req.query;
+    const pageNum = parseInt(page as string, 10) || 1;
+    const limitNum = parseInt(limit as string, 10) || 20;
+    const skip = (pageNum - 1) * limitNum;
 
-    const mockCategories = {
-      'hair-services': {
-        id: 'cat1',
-        name: 'Hair Services',
-        slug: 'hair-services',
-        description: 'All hair related services',
-        icon: null
-      },
-      'beauty-services': {
-        id: 'cat2',
-        name: 'Beauty Services',
-        slug: 'beauty-services',
-        description: 'Beauty and skincare services',
-        icon: null
-      }
-    };
-
-    const category = mockCategories[categorySlug as keyof typeof mockCategories];
+    // Find the category by slug
+    const category = await req.prisma.serviceCategory.findUnique({
+      where: { slug: categorySlug }
+    });
 
     if (!category) {
       const response: ApiResponse = {
@@ -190,71 +192,81 @@ export const handleServicesByCategory: RequestHandler = async (req, res) => {
       return res.status(404).json(response);
     }
 
-    const mockServices = categorySlug === 'hair-services' ? [
-      {
-        id: 's1',
-        salonId: '1',
-        name: 'Hair Cut',
-        description: 'Professional hair cutting service',
-        salon: {
-          id: '1',
-          name: 'StyleMaster Salon',
-          slug: 'stylemaster-salon',
-          address: '123 MG Road, Bangalore',
-          city: 'Bangalore',
-          averageRating: 4.5,
-          totalReviews: 25
+    // Build where clause for services
+    const where: any = {
+      categoryId: category.id,
+      isActive: true,
+      salon: {
+        isActive: true
+      }
+    };
+
+    if (city) {
+      where.salon.city = {
+        contains: city as string,
+        mode: 'insensitive'
+      };
+    }
+
+    // Fetch services with salon info
+    const [services, total] = await Promise.all([
+      req.prisma.service.findMany({
+        where,
+        include: {
+          salon: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              address: true,
+              city: true,
+              averageRating: true,
+              totalReviews: true
+            }
+          }
         },
-        price: 300,
-        durationMinutes: 45
+        orderBy: { price: 'asc' },
+        skip,
+        take: limitNum
+      }),
+      req.prisma.service.count({ where })
+    ]);
+
+    // Transform services to match frontend expectations
+    const transformedServices = services.map(service => ({
+      id: service.id,
+      salonId: service.salonId,
+      name: service.name,
+      description: service.description,
+      salon: {
+        id: service.salon.id,
+        name: service.salon.name,
+        slug: service.salon.slug,
+        address: service.salon.address,
+        city: service.salon.city,
+        averageRating: service.salon.averageRating,
+        totalReviews: service.salon.totalReviews
       },
-      {
-        id: 's2',
-        salonId: '1',
-        name: 'Beard Styling',
-        description: 'Expert beard grooming',
-        salon: {
-          id: '1',
-          name: 'StyleMaster Salon',
-          slug: 'stylemaster-salon',
-          address: '123 MG Road, Bangalore',
-          city: 'Bangalore',
-          averageRating: 4.5,
-          totalReviews: 25
-        },
-        price: 150,
-        durationMinutes: 30
-      }
-    ] : [
-      {
-        id: 's3',
-        salonId: '2',
-        name: 'Facial',
-        description: 'Complete facial treatment',
-        salon: {
-          id: '2',
-          name: 'Beauty Bliss',
-          slug: 'beauty-bliss',
-          address: '456 Brigade Road, Bangalore',
-          city: 'Bangalore',
-          averageRating: 4.2,
-          totalReviews: 18
-        },
-        price: 500,
-        durationMinutes: 60
-      }
-    ];
+      price: service.price,
+      durationMinutes: service.durationMinutes
+    }));
 
     const response: ApiResponse = {
       success: true,
       data: {
-        category,
-        services: mockServices,
+        category: {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+          description: category.description,
+          icon: category.icon
+        },
+        services: transformedServices,
         pagination: {
-          page: 1,
-          limit: 20,
-          total: mockServices.length,
-          totalPages: 1
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages: Math.ceil(total / limitNum)
         }
       }
     };
@@ -264,7 +276,7 @@ export const handleServicesByCategory: RequestHandler = async (req, res) => {
     console.error('Error fetching services by category:', error);
     const response: ApiResponse = {
       success: false,
-      error: "Failed to fetch services"
+      error: `Failed to fetch services: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
     res.status(500).json(response);
   }

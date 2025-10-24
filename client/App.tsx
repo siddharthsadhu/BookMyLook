@@ -33,7 +33,9 @@ import Help from "./pages/Help";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Estimate from "./pages/Estimate";
+import SalonDetails from "./pages/SalonDetails";
 import NotFound from "./pages/NotFound";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +47,7 @@ function RouterWithTransitions(){
         {/* Public Pages */}
         <Route path="/" element={<SiteLayout><Page><Index /></Page></SiteLayout>} />
         <Route path="/services" element={<SiteLayout><Page><Services /></Page></SiteLayout>} />
+        <Route path="/salon/:slug" element={<SiteLayout><Page><ErrorBoundary><SalonDetails /></ErrorBoundary></Page></SiteLayout>} />
         <Route path="/about" element={<SiteLayout><Page><About /></Page></SiteLayout>} />
         <Route path="/booking" element={<SiteLayout><Page><Booking /></Page></SiteLayout>} />
         <Route path="/contact" element={<SiteLayout><Page><Contact /></Page></SiteLayout>} />

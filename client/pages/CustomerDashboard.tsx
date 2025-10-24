@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { useI18n } from "@/i18n";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,6 @@ interface CustomerAnalytics {
 }
 
 export default function CustomerDashboard() {
-  const { t } = useI18n();
   const { user } = useAuth();
   const { isConnected } = useRealTime();
   const [bookings, setBookings] = useState<Booking[]>([]);

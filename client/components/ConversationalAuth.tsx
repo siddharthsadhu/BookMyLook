@@ -333,7 +333,7 @@ export const ConversationalAuth: React.FC<AuthProps> = ({ mode, onComplete, onMo
 
     try {
       console.log('Attempting to call forgot password API...');
-      const response = await fetch('http://localhost:3001/api/auth/forgot-password', {
+      const response = await fetch('http://localhost:8080/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
