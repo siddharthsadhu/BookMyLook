@@ -8,6 +8,7 @@ interface AuthContextType {
   register: (userData: RegisterRequest) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -17,9 +18,9 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Simple storage keys
-const TOKEN_KEY = 'bookmylook_token';
-const REFRESH_KEY = 'bookmylook_refresh';
+// Simple storage keys - match OAuthCallback
+const TOKEN_KEY = 'accessToken';
+const REFRESH_KEY = 'refreshToken';
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -28,15 +29,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check authentication on app load
   useEffect(() => {
     const checkAuth = async () => {
+      console.log('🔍 Checking authentication on app load...');
       const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+      console.log('📋 Stored token:', token ? 'PRESENT' : 'NOT FOUND');
 
       if (!token) {
+        console.log('❌ No token found, user not authenticated');
         setIsLoading(false);
         return;
       }
 
       try {
-        const response = await fetch('http://localhost:8080/api/auth/me', {
+        console.log('🔄 Calling /api/auth/me to verify token...');
+        const response = await fetch('/api/auth/me', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -44,10 +49,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         const data: ApiResponse = await response.json();
+        console.log('📡 Auth check response:', data);
 
         if (data.success && data.data) {
+          console.log('✅ User authenticated:', data.data);
           setUser(data.data as User);
         } else {
+          console.log('❌ Token invalid, clearing storage');
           // Clear invalid tokens
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(REFRESH_KEY);
@@ -55,7 +63,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           sessionStorage.removeItem(REFRESH_KEY);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('❌ Auth check failed:', error);
         // Clear tokens on error
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(REFRESH_KEY);
@@ -71,7 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (credentials: LoginRequest & { rememberMe?: boolean }): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -106,7 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (userData: RegisterRequest): Promise<{ success: boolean; error?: string }> => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -138,7 +146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
       if (token) {
-        await fetch('http://localhost:8080/api/auth/logout', {
+        await fetch('/api/auth/logout', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -162,7 +170,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/me', {
+      const response = await fetch('/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -182,6 +190,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshAuth = async (): Promise<void> => {
+    console.log('🔄 Manually refreshing authentication state...');
+    const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+
+    if (!token) {
+      console.log('❌ No token found during manual refresh');
+      setUser(null);
+      return;
+    }
+
+    try {
+      console.log('🔄 Calling /api/auth/me during manual refresh...');
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data: ApiResponse = await response.json();
+      console.log('📡 Manual auth refresh response:', data);
+
+      if (data.success && data.data) {
+        console.log('✅ User authenticated during manual refresh:', data.data);
+        setUser(data.data as User);
+      } else {
+        console.log('❌ Token invalid during manual refresh');
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('❌ Manual auth refresh failed:', error);
+      setUser(null);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -189,6 +232,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     refreshUser,
+    refreshAuth,
     isAuthenticated: !!user
   };
 

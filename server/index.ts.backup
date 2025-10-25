@@ -3,15 +3,15 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import passport from "passport";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-// Removed: import passport from "passport";
 import { Server as SocketIOServer } from "socket.io";
 import { createServer as createHttpServer } from "http";
 import { ApiResponse, UserRole } from "@shared/api";
 
 // Import Prisma client
-import { PrismaClient } from "../generated/prisma/index.js";
+import { PrismaClient } from '@prisma/client';
 
 // Import route handlers
 import { handleDemo } from "./routes/demo";
@@ -43,9 +43,14 @@ import {
   handleResetPassword,
   handleGetCurrentUser
 } from "./routes/auth";
-import { handleGoogleAuth, handleGoogleCallback, setPrismaInstance, initializeOAuthStrategy } from "./routes/oauth";
-import { handlePartnershipInquiry } from "./routes/partnerships";
+import "../utils/passport-google";
+import { 
+  handleGoogleOAuthCallback,
+  handleGetOAuthProviders,
+  handleUnlinkOAuthProvider
+} from "./routes/oauth";
 import { handleSeedAdmin } from "./routes/admin";
+import { handlePartnershipInquiry } from "./routes/partnerships";
 import { authRateLimit, registrationRateLimit, generalRateLimit, securityHeaders } from "./utils/security";
 import { ErrorResponse, handlePrismaError } from "./utils/error-handling";
 import {
@@ -56,8 +61,14 @@ import {
 } from "./routes/queue";
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret';
+
+// Function to generate token
+const generateToken = (user: any) => {
+  const token = jwt.sign(user, JWT_SECRET, { expiresIn: '1h' });
+  return token;
+};
 
 // Extend Express Request to include user and prisma
 declare global {
@@ -132,12 +143,18 @@ export function createServer() {
   // Create HTTP server first
   const httpServer = createHttpServer(app);
 
-  // Initialize Prisma client
-  const prisma = new PrismaClient();
-
-  // Initialize OAuth with Prisma instance
-  setPrismaInstance(prisma);
-  initializeOAuthStrategy();
+  // Initialize Prisma client with error handling
+  let prisma;
+  try {
+    prisma = new PrismaClient({
+      log: ['error', 'warn'],
+    });
+    console.log('✅ Prisma client initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize Prisma client:', error);
+    console.log('⚠️  Server will start without database connection');
+    prisma = null;
+  }
 
   // Initialize Socket.IO server
   const io = new SocketIOServer(httpServer, {
@@ -217,9 +234,11 @@ export function createServer() {
   // Attach io instance to app for use in routes
   app.set('io', io);
 
-  // Middleware to attach Prisma to request
+  // Middleware to attach Prisma to request (if available)
   app.use((req: Request, res: Response, next: NextFunction) => {
-    req.prisma = prisma;
+    if (prisma) {
+      req.prisma = prisma;
+    }
     next();
   });
 
@@ -230,14 +249,14 @@ export function createServer() {
   // Cookie parsing middleware
   app.use(cookieParser());
 
-  // Removed: Passport middleware - using manual OAuth implementation
+  // Initialize Passport
+  app.use(passport.initialize());
 
   // Security Middleware
   app.use(helmet());
   app.use(cors({
     origin: [
-      process.env.FRONTEND_URL || 'http://localhost:8083',
-      'http://localhost:8080',
+      process.env.FRONTEND_URL || 'http://localhost:8080',
       'http://localhost:8081',
       'http://127.0.0.1:61781', // Vite proxy port
       'http://127.0.0.1:54600' // Browser preview port
@@ -291,11 +310,13 @@ export function createServer() {
   app.get("/api/auth/me", authenticateToken, handleGetCurrentUser);
   app.post("/api/auth/forgot-password", authRateLimit, handleRequestPasswordReset);
   app.post("/api/auth/reset-password", authRateLimit, handleResetPassword);
-  
-  // Google OAuth routes
-  app.get("/api/auth/google", handleGoogleAuth);
-  app.get("/api/auth/google/callback", handleGoogleCallback);
-  
+
+  // OAuth implementation
+  app.get('/api/auth/oauth', passport.authenticate('oauth', { scope: ['email', 'profile'] }));
+  app.get('/api/auth/oauth/callback', passport.authenticate('oauth', { failureRedirect: '/api/auth/login' }), (req, res) => {
+    res.redirect('/api/auth/me');
+  });
+
   // Public salon and service routes
   app.get("/api/shops", handleShops);
   app.get("/api/shops/:id", handleGetSalon);
@@ -317,6 +338,7 @@ export function createServer() {
   
   // Partnership inquiry (public)
   app.post("/api/partnerships/inquire", handlePartnershipInquiry);
+
 
   // Admin seeding (public - for initial setup)
   app.post("/api/admin/seed", handleSeedAdmin);

@@ -1,7 +1,8 @@
+import "dotenv/config";
 import { createServer } from "./index.js";
 
 const app = createServer();
-const port = process.env.PORT || 3001; // Changed from 3000 to avoid conflicts
+const port = process.env.PORT || 3002; // Changed from 3000 to avoid conflicts
 
 const server = app.listen(port, () => {
   console.log(`🚀 Express server running on port ${port}`);

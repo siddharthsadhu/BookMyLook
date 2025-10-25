@@ -333,7 +333,7 @@ export const ConversationalAuth: React.FC<AuthProps> = ({ mode, onComplete, onMo
 
     try {
       console.log('Attempting to call forgot password API...');
-      const response = await fetch('http://localhost:8080/api/auth/forgot-password', {
+      const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -787,8 +787,8 @@ export const ConversationalAuth: React.FC<AuthProps> = ({ mode, onComplete, onMo
                 className="w-full py-3 border-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 disabled={isLoading}
                 onClick={() => {
-                  // TODO: Implement Google OAuth
-                  console.log('Google OAuth clicked');
+                  // Redirect to Google OAuth
+                  window.location.href = '/api/auth/google';
                 }}
               >
                 <Chrome className="w-4 h-4 mr-2" />

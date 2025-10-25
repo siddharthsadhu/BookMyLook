@@ -40,6 +40,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Estimate = lazy(() => import("./pages/Estimate"));
 const SalonDetails = lazy(() => import("./pages/SalonDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const OAuthCallback = lazy(() => import("./pages/OAuthCallback"));
 
 // Loading component
 const PageLoader = () => (
@@ -83,6 +84,9 @@ function RouterWithTransitions(){
           <ProtectedRoute requireAuth={false}>
             <Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>
           </ProtectedRoute>
+        } />
+        <Route path="/auth/callback" element={
+          <Suspense fallback={<PageLoader />}><OAuthCallback /></Suspense>
         } />
         
         {/* Dashboard Pages */}

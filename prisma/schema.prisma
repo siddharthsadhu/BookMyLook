@@ -31,7 +31,6 @@ model User {
   
   // Relations
   ownedSalons       Salon[]          @relation("SalonOwner")
-  staffProfile      Staff?
   bookings          Booking[]
   reviews           Review[]
   favorites         Favorite[]
