@@ -241,12 +241,7 @@ PING_MESSAGE=Hello from QThrough!
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
 
-For support and questions:
-- **Email**: support@bookmylook.com
-- **Phone**: +91 98765 43210
-- **Help Center**: `/help` page in the application
 
 ## 🔮 Future Enhancements
 
