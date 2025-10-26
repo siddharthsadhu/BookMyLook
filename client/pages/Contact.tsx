@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Phone, MapPin, Clock, MessageSquare, Send } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -42,8 +43,18 @@ export default function Contact() {
       const data = await response.json();
 
       if (data.success) {
-        alert(data.message || 'Message sent successfully! We\'ll get back to you within 24 hours.');
-        
+        toast.success('Message sent successfully! We\'ll get back to you within 24 hours.', {
+          duration: 4000,
+          style: {
+            background: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500'
+          }
+        });
+
         // Reset form
         setFormData({
           name: '',
@@ -54,11 +65,31 @@ export default function Contact() {
           inquiry_type: ''
         });
       } else {
-        alert(`Failed to send message: ${data.error}`);
+        toast.error(`Failed to send message: ${data.error || 'Please try again.'}`, {
+          duration: 5000,
+          style: {
+            background: '#ef4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500'
+          }
+        });
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please check your connection and try again.', {
+        duration: 5000,
+        style: {
+          background: '#f59e0b',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          fontSize: '14px',
+          fontWeight: '500'
+        }
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -69,21 +100,21 @@ export default function Contact() {
       icon: <Mail className="h-6 w-6" />,
       title: "Email Us",
       description: "Send us an email anytime",
-      details: "support@bookmylook.com",
-      action: "mailto:support@bookmylook.com"
+      details: "siddharthsme01@gmail.com",
+      action: "mailto:siddharthsme01@gmail.com"
     },
     {
       icon: <Phone className="h-6 w-6" />,
       title: "Call Us",
       description: "Mon-Fri from 9am to 6pm",
-      details: "+91 98765 43210",
-      action: "tel:+919876543210"
+      details: "+91 94276 73752",
+      action: "tel:+919427673752"
     },
     {
       icon: <MapPin className="h-6 w-6" />,
       title: "Visit Us",
       description: "Come say hello at our office",
-      details: "123 Tech Street, Mumbai, India 400001",
+      details: "123 Tech Street, Ahmedabad, Gujarat 380001",
       action: "https://maps.google.com"
     },
     {
@@ -147,7 +178,7 @@ export default function Contact() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-xl ring-1 ring-white/20 hover:shadow-3xl transition-all duration-500 overflow-hidden">
+            <Card className="premium-card overflow-hidden">
               {/* Gradient Border Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 rounded-lg opacity-50"></div>
 
@@ -222,16 +253,14 @@ export default function Contact() {
                         <span className="text-blue-600">📱</span>
                         Phone Number
                       </Label>
-                      <div className="relative group">
-                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-600 font-semibold bg-white px-1">
-                          🇮🇳 +91
-                        </div>
+                      <div className="relative">
                         <Input
                           id="phone"
+                          type="tel"
                           value={formData.phone}
                           onChange={(e) => handleInputChange('phone', e.target.value)}
-                          placeholder="9876543210"
-                          className="pl-16 h-12 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white/80 backdrop-blur-sm transition-all duration-300 text-slate-800 placeholder:text-slate-400"
+                          placeholder="Enter your phone number"
+                          className="h-12 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white/80 backdrop-blur-sm transition-all duration-300 text-slate-800 placeholder:text-slate-400"
                         />
                       </div>
                     </div>
@@ -360,7 +389,7 @@ export default function Contact() {
                     whileHover={{ y: -2 }}
                     className="group"
                   >
-                    <Card className="shadow-lg border-0 bg-gradient-to-br from-white via-slate-50/30 to-white backdrop-blur-sm hover:shadow-xl transition-all duration-500 ring-1 ring-slate-200/50 hover:ring-slate-300/70 cursor-pointer">
+                    <Card className="glass hover:shadow-xl transition-all duration-500 ring-1 ring-slate-200/50 hover:ring-slate-300/70 cursor-pointer">
                       <CardContent className="p-6">
                         <div className="flex items-start gap-4">
                           <motion.div

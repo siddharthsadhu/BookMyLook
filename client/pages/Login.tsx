@@ -36,16 +36,34 @@ export default function Login() {
       icon: Store,
       accounts: [
         {
-          email: "rajesh@stylestudio.com",
+          email: "rajesh@patelbeautystudio.com",
           password: "owner123",
-          name: "Rajesh Kumar",
-          description: "Style Studio Premium"
+          name: "Rajesh Patel",
+          description: "Patel Beauty Studio"
         },
         {
-          email: "priya@beautylounge.com",
+          email: "priya@shahbeautylounge.com",
           password: "owner456",
-          name: "Priya Sharma",
-          description: "Beauty Lounge"
+          name: "Priya Shah",
+          description: "Shah Beauty Lounge"
+        },
+        {
+          email: "vikas@joshigrooming.com",
+          password: "owner789",
+          name: "Vikas Joshi",
+          description: "Joshi Grooming Hub"
+        },
+        {
+          email: "meera@mehtabeautysalon.com",
+          password: "owner101",
+          name: "Meera Mehta",
+          description: "Mehta Beauty Salon"
+        },
+        {
+          email: "arjun@parmarluxury.com",
+          password: "owner202",
+          name: "Arjun Parmar",
+          description: "Parmar Luxury Spa"
         }
       ]
     },
@@ -54,16 +72,34 @@ export default function Login() {
       icon: User,
       accounts: [
         {
-          email: "john@example.com",
+          email: "rahul@example.com",
           password: "customer123",
-          name: "John Doe",
+          name: "Rahul Patel",
           description: "Regular Customer"
         },
         {
-          email: "sarah@example.com",
+          email: "priya@example.com",
           password: "customer456",
-          name: "Sarah Wilson",
+          name: "Priya Shah",
+          description: "Beauty Enthusiast"
+        },
+        {
+          email: "mike@example.com",
+          password: "customer789",
+          name: "Mike Johnson",
           description: "Premium Customer"
+        },
+        {
+          email: "emma@example.com",
+          password: "customer101",
+          name: "Emma Davis",
+          description: "Loyal Customer"
+        },
+        {
+          email: "alex@example.com",
+          password: "customer202",
+          name: "Alex Brown",
+          description: "New Customer"
         }
       ]
     }

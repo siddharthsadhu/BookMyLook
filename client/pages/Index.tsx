@@ -321,18 +321,18 @@ export default function Index() {
                         Mobile Number *
                       </label>
                       <div className="relative group">
-                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-600 z-10 font-semibold bg-white px-1">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-600 z-10 font-semibold bg-white px-2 rounded">
                           🇮🇳 +91
                         </div>
                         <input
                           id="phone"
                           name="phone"
                           type="tel"
-                          placeholder="9876543210"
+                          placeholder="Enter mobile number"
                           required
                           pattern="^[6-9]\d{9}$"
                           title="Please enter a valid 10-digit mobile number"
-                          className="w-full h-12 pl-16 pr-12 text-base transition-all duration-300 border-2 rounded-xl border-slate-200 hover:border-blue-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white/80 backdrop-blur-sm shadow-sm focus:shadow-lg focus:ring-0 text-slate-800 placeholder:text-slate-400"
+                          className="w-full h-12 pl-20 pr-12 text-base transition-all duration-300 border-2 rounded-xl border-slate-200 hover:border-blue-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 bg-white/80 backdrop-blur-sm shadow-sm focus:shadow-lg focus:ring-0 text-slate-800 placeholder:text-slate-400"
                         />
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-200">
                           <Smartphone className="h-4 w-4" />

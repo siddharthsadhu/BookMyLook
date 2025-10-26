@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Search, HelpCircle, MessageSquare, Phone, Mail, BookOpen, Video, Download } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface FAQ {
   id: number;
@@ -214,22 +215,31 @@ export default function Help() {
             className="max-w-2xl mx-auto"
           >
             <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-xl ring-1 ring-white/20">
-              <CardContent className="p-2">
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400">
-                    <Search className="h-6 w-6" />
+              <CardContent className="p-3">
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400">
+                      <Search className="h-5 w-5" />
+                    </div>
+                    <Input
+                      placeholder="Search for help articles, FAQs, or topics..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-12 h-12 text-base border-0 bg-transparent focus:ring-4 focus:ring-blue-500/10 text-slate-800 placeholder:text-slate-400"
+                    />
                   </div>
-                  <Input
-                    placeholder="Search for help articles, FAQs, or topics..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-14 h-14 text-lg border-0 bg-transparent focus:ring-4 focus:ring-blue-500/10 text-slate-800 placeholder:text-slate-400"
-                  />
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 h-10 px-6">
+                    <Button
+                      onClick={() => {
+                        // Handle search functionality
+                        console.log('Searching for:', searchTerm);
+                      }}
+                      className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 h-12 px-8 whitespace-nowrap"
+                    >
+                      <Search className="h-4 w-4 mr-2" />
                       Search
                     </Button>
                   </motion.div>
@@ -477,9 +487,11 @@ export default function Help() {
                           whileTap={{ scale: 0.98 }}
                           className="mt-auto"
                         >
-                          <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 h-12">
-                            <BookOpen className="h-4 w-4 mr-2" />
-                            Read Article
+                          <Button asChild className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 h-12">
+                            <Link to={`/help/article/${article.id}`}>
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Read Article
+                            </Link>
                           </Button>
                         </motion.div>
                       </CardContent>
@@ -591,14 +603,26 @@ export default function Help() {
                           whileTap={{ scale: 0.98 }}
                           className="mt-auto"
                         >
-                          <Button className={`w-full h-12 bg-gradient-to-r ${resource.gradient} hover:opacity-90 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300`}>
-                            {resource.title === "Video Tutorials" && <Video className="h-4 w-4 mr-2" />}
-                            {resource.title === "User Guides" && <Download className="h-4 w-4 mr-2" />}
-                            {resource.title === "API Documentation" && <BookOpen className="h-4 w-4 mr-2" />}
-                            {resource.title === "Video Tutorials" ? "Watch Videos" :
-                             resource.title === "User Guides" ? "Download Guides" :
-                             "View Docs"}
-                          </Button>
+                          {resource.title === "Video Tutorials" ? (
+                            <Button className={`w-full h-12 bg-gradient-to-r ${resource.gradient} hover:opacity-90 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300`}>
+                              <Video className="h-4 w-4 mr-2" />
+                              Watch Videos
+                            </Button>
+                          ) : resource.title === "User Guides" ? (
+                            <Button asChild className={`w-full h-12 bg-gradient-to-r ${resource.gradient} hover:opacity-90 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300`}>
+                              <Link to="/guides">
+                                <Download className="h-4 w-4 mr-2" />
+                                Download Guides
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button asChild className={`w-full h-12 bg-gradient-to-r ${resource.gradient} hover:opacity-90 text-white font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300`}>
+                              <Link to="/api-docs">
+                                <BookOpen className="h-4 w-4 mr-2" />
+                                View Docs
+                              </Link>
+                            </Button>
+                          )}
                         </motion.div>
                       </CardContent>
                     </Card>

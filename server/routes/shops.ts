@@ -115,18 +115,6 @@ export const handleGetSalon: RequestHandler = async (req, res) => {
             lastName: true
           }
         },
-        staff: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true
-              }
-            }
-          },
-          where: { isActive: true }
-        },
         reviews: {
           where: { isVisible: true },
           include: {

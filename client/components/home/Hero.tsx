@@ -25,7 +25,7 @@ export default function Hero({ stats, statsLoading }: { stats?: { salons: number
       <div className="container grid lg:grid-cols-2 gap-10 items-center py-20 md:py-28">
         <motion.div initial={{opacity:0, y: 30}} animate={{opacity:1, y:0}} transition={{duration:0.6}}>
           <span className="inline-flex items-center gap-2 text-xs px-2.5 py-1 rounded-full border bg-background/60">
-            <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
+            <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
             Live {t("real_time_updates")}
           </span>
           <h1 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight">
@@ -87,7 +87,7 @@ function PhoneMockup(){
                 <div className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{s.name}</div>
                 <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{s.price}</div>
               </div>
-              <div className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">{s.wait} min</div>
+              <div className={`text-xs px-2 py-1 rounded-full ${theme === 'dark' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/50' : 'bg-green-100 text-green-700'}`}>{s.wait} min</div>
             </div>
           ))}
           <div className="flex gap-2">

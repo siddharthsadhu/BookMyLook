@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Sparkles,
   Mail,
@@ -29,10 +30,21 @@ export default function Footer(){
   const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const { toast } = useToast();
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubscribed(true);
+
+    // Show success toast
+    toast({
+      title: "🎉 Successfully Subscribed!",
+      description: "Thank you for subscribing! Get ready for exclusive updates and 10% off your first booking.",
+      duration: 5000,
+    });
+
+    // Clear email and reset after 3 seconds
+    setEmail("");
     setTimeout(() => setIsSubscribed(false), 3000);
   };
 
@@ -182,10 +194,10 @@ export default function Footer(){
             <div className="space-y-3">
               {[
                 { name: "About Us", href: "/about" },
-                { name: "Careers", href: "/careers" },
+                { name: "Browse Salons", href: "/services" },
                 { name: "Partner With Us", href: "/partners" },
-                { name: "Press & Media", href: "/press" },
-                { name: "Contact Support", href: "/support" }
+                { name: "AI Beauty Assistant", href: "/ai-assistant" },
+                { name: "Contact", href: "/contact" }
               ].map((link, index) => (
                 <motion.a
                   key={index}
@@ -226,10 +238,10 @@ export default function Footer(){
               <div className="p-4 rounded-xl bg-background/50 backdrop-blur-sm border">
                 <div className="flex items-center gap-3 mb-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Delhi NCR</span>
+                  <span className="text-sm font-medium">Ahmedabad, Gujarat</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Connaught Place, New Delhi</p>
-                <p className="text-xs text-muted-foreground">Sector 18, Noida</p>
+                <p className="text-xs text-muted-foreground">CG Road, Ahmedabad</p>
+                <p className="text-xs text-muted-foreground">Satellite, Ahmedabad</p>
               </div>
 
               <div className="p-4 rounded-xl bg-background/50 backdrop-blur-sm border">
@@ -237,8 +249,8 @@ export default function Footer(){
                   <Phone className="h-4 w-4 text-green-500" />
                   <span className="text-sm font-medium">24/7 Support</span>
                 </div>
-                <p className="text-xs text-muted-foreground">+91 98765 43210</p>
-                <p className="text-xs text-muted-foreground">support@bookmylook.com</p>
+                <p className="text-xs text-muted-foreground">+91 94276 73752</p>
+                <p className="text-xs text-muted-foreground">siddharthsme01@gmail.com</p>
               </div>
 
               <div className="p-4 rounded-xl bg-background/50 backdrop-blur-sm border">
@@ -350,7 +362,7 @@ export default function Footer(){
                 viewport={{ once: true }}
                 className="text-sm text-muted-foreground text-center md:text-left"
               >
-                © {new Date().getFullYear()} Book My Look. All rights reserved.
+                © {new Date().getFullYear()} Book My Look by Siddharth Sadhu. All rights reserved.
                 <span className="hidden md:inline"> • </span>
                 <br className="md:hidden" />
                 Made with <Heart className="inline h-3 w-3 text-red-500 mx-1" /> for amazing salon experiences.

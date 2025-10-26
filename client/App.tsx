@@ -41,6 +41,14 @@ const Estimate = lazy(() => import("./pages/Estimate"));
 const SalonDetails = lazy(() => import("./pages/SalonDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OAuthCallback = lazy(() => import("./pages/OAuthCallback"));
+const Careers = lazy(() => import("./pages/Careers"));
+const Partners = lazy(() => import("./pages/Partners"));
+const AIAssistant = lazy(() => import("./pages/AIAssistant"));
+const Cookies = lazy(() => import("./pages/Cookies"));
+const Sitemap = lazy(() => import("./pages/Sitemap"));
+const ArticleDetail = lazy(() => import("./pages/ArticleDetail"));
+const Guides = lazy(() => import("./pages/Guides"));
+const APIDocs = lazy(() => import("./pages/APIDocs"));
 
 // Loading component
 const PageLoader = () => (
@@ -63,10 +71,18 @@ function RouterWithTransitions(){
         <Route path="/about" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><About /></Suspense></Page></SiteLayout>} />
         <Route path="/booking" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Booking /></Suspense></Page></SiteLayout>} />
         <Route path="/contact" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Contact /></Suspense></Page></SiteLayout>} />
+        <Route path="/ai-assistant" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><AIAssistant /></Suspense></Page></SiteLayout>} />
         <Route path="/reviews" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Reviews /></Suspense></Page></SiteLayout>} />
+        <Route path="/careers" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Careers /></Suspense></Page></SiteLayout>} />
+        <Route path="/partners" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Partners /></Suspense></Page></SiteLayout>} />
         <Route path="/help" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Help /></Suspense></Page></SiteLayout>} />
         <Route path="/terms" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Terms /></Suspense></Page></SiteLayout>} />
         <Route path="/privacy" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Privacy /></Suspense></Page></SiteLayout>} />
+        <Route path="/cookies" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Cookies /></Suspense></Page></SiteLayout>} />
+        <Route path="/sitemap" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Sitemap /></Suspense></Page></SiteLayout>} />
+        <Route path="/help/article/:id" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><ArticleDetail /></Suspense></Page></SiteLayout>} />
+        <Route path="/guides" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Guides /></Suspense></Page></SiteLayout>} />
+        <Route path="/api-docs" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><APIDocs /></Suspense></Page></SiteLayout>} />
         <Route path="/estimate" element={<SiteLayout><Page><Suspense fallback={<PageLoader />}><Estimate /></Suspense></Page></SiteLayout>} />
         
         {/* Authentication Pages */}

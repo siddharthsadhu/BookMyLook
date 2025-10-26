@@ -147,7 +147,7 @@ function AuthForm({ mode, onSuccess, onSwitchMode, loading, setLoading, login, r
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
-              placeholder="+91 98765 43210"
+              placeholder="Enter your phone number"
               required
             />
           </div>
@@ -1032,16 +1032,17 @@ export default function Booking() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
+                    className="h-full"
                   >
                     <Card
-                      className={`cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-2 ${
+                      className={`cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-2 h-full flex flex-col ${
                         selectedSalon?.id === salon.id
                           ? 'border-primary shadow-lg shadow-primary/20'
                           : 'border-border hover:border-primary/50'
                       }`}
                       onClick={() => handleSalonSelect(salon)}
                     >
-                      <CardHeader className="pb-3">
+                      <CardHeader className="pb-3 flex-shrink-0">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <CardTitle className="text-lg line-clamp-2">{salon.name}</CardTitle>
@@ -1053,8 +1054,8 @@ export default function Booking() {
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
+                      <CardContent className="flex-1 flex flex-col justify-between">
+                        <div className="space-y-3 flex-1">
                           <div className="flex items-start gap-2 text-sm text-muted-foreground">
                             <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                             <span className="line-clamp-2">{salon.address}</span>
@@ -1064,15 +1065,15 @@ export default function Booking() {
                             <Clock className="h-4 w-4" />
                             <span>{salon.openingTime} - {salon.closingTime}</span>
                           </div>
+                        </div>
 
-                          <div className="flex items-center justify-between pt-2 border-t">
-                            <div className="text-sm text-muted-foreground">
-                              {salon.services?.length || 0} services
-                            </div>
-                            <Badge variant="secondary">
-                              {salon._count.bookings}+ bookings
-                            </Badge>
+                        <div className="flex items-center justify-between pt-2 border-t mt-3">
+                          <div className="text-sm text-muted-foreground">
+                            {salon.services?.length || 0} services
                           </div>
+                          <Badge variant="secondary">
+                            {salon._count.bookings}+ bookings
+                          </Badge>
                         </div>
                       </CardContent>
                     </Card>

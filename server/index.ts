@@ -283,10 +283,10 @@ export function createServer() {
   // Demo endpoint
   app.get("/api/demo", handleDemo);
   
-  // ===== AUTH ROUTES =====
+  // ===== PUBLIC AUTH ROUTES =====
   app.post("/api/auth/register", registrationRateLimit, handleRegister);
   app.post("/api/auth/login", authRateLimit, handleLogin);
-  app.post("/api/auth/refresh", authRateLimit, handleRefreshToken);
+  app.post("/api/auth/refresh", handleRefreshToken);
   app.post("/api/auth/logout", handleLogout);
   app.get("/api/auth/me", authenticateToken, handleGetCurrentUser);
   app.post("/api/auth/forgot-password", authRateLimit, handleRequestPasswordReset);

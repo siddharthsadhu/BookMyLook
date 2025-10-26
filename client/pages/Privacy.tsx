@@ -68,7 +68,7 @@ export default function Privacy() {
     {
       id: "contact-us",
       title: "Contact Us",
-      content: `If you have any questions about this Privacy Policy or our privacy practices, please contact us at privacy@bookmylook.com or through our contact page. We will respond to your inquiry within 30 days.`
+      content: `If you have any questions about this Privacy Policy or our privacy practices, please contact us at siddharthsme01@gmail.com or through our contact page. We will respond to your inquiry within 30 days.`
     }
   ];
 
@@ -310,7 +310,7 @@ export default function Privacy() {
                   If you have any questions about this Privacy Policy or want to exercise your privacy rights, please contact us.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">privacy@bookmylook.com</Badge>
+                  <Badge variant="secondary">siddharthsme01@gmail.com</Badge>
                   <Badge variant="secondary">Data Protection Officer</Badge>
                   <Badge variant="secondary">GDPR Request Form</Badge>
                 </div>

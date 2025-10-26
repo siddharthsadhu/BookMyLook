@@ -1424,7 +1424,7 @@ export default function CustomerDashboard() {
                   <h4 className="font-medium mb-1">Phone Support</h4>
                   <p className="text-sm text-slate-600 mb-3">Call us anytime</p>
                   <Button size="sm" variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400 font-medium transition-all duration-200">
-                    +91 98765 43210
+                    +91 94276 73752
                   </Button>
                 </div>
                 <div className="text-center p-4 bg-white rounded-lg border">

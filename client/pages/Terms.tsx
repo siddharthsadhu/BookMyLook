@@ -73,7 +73,7 @@ export default function Terms() {
     {
       id: "contact",
       title: "Contact Information",
-      content: `If you have any questions about these Terms of Service, please contact us at legal@bookmylook.com or through our contact page.`
+      content: `If you have any questions about these Terms of Service, please contact us at siddharthsme01@gmail.com or through our contact page.`
     }
   ];
 
@@ -198,8 +198,8 @@ export default function Terms() {
                   If you have any questions about these Terms of Service, please don't hesitate to contact us.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">legal@bookmylook.com</Badge>
-                  <Badge variant="secondary">+91 98765 43210</Badge>
+                  <Badge variant="secondary">siddharthsme01@gmail.com</Badge>
+                  <Badge variant="secondary">+91 94276 73752</Badge>
                   <Badge variant="secondary">Contact Form</Badge>
                 </div>
               </CardContent>
