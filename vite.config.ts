@@ -10,13 +10,13 @@ export default defineConfig(({ mode }) => ({
     port: 8083,
     proxy: {
       '/api': {
-        target: 'http://localhost:3002',
+        target: 'http://localhost:3007',
         changeOrigin: true,
         secure: false,
       },
       // Proxy Socket.IO connections
       '/socket.io': {
-        target: 'http://localhost:3002',
+        target: 'http://localhost:3007',
         changeOrigin: true,
         secure: false,
         ws: true, // Enable WebSocket proxying

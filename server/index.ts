@@ -45,7 +45,7 @@ import {
 } from "./routes/auth";
 import { handleGoogleAuth, handleGoogleCallback, setPrismaInstance, initializeOAuthStrategy } from "./routes/oauth";
 import { handlePartnershipInquiry } from "./routes/partnerships";
-import { handleSeedAdmin } from "./routes/admin";
+import { handleSeedAdmin, handleGetAnalytics, handleGetDashboardStats, handleGetUsers, handleGetSalons, handleGetAllBookings, handleUpdateUserStatus, handleUpdateSalonStatus, handleUpdateBookingStatus } from "./routes/admin";
 import { authRateLimit, registrationRateLimit, generalRateLimit, securityHeaders } from "./utils/security";
 import { ErrorResponse, handlePrismaError } from "./utils/error-handling";
 import {
@@ -56,7 +56,7 @@ import {
 } from "./routes/queue";
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret';
 
 // Extend Express Request to include user and prisma
@@ -106,7 +106,14 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
 // Role-based Authorization Middleware
 const authorize = (...roles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    console.log('🔐 Authorization check:', {
+      userRole: req.user?.role,
+      requiredRoles: roles,
+      userId: req.user?.userId
+    });
+
     if (!req.user) {
+      console.log('❌ Authorization failed: No user in request');
       const response: ApiResponse = {
         success: false,
         error: 'Authentication required'
@@ -114,7 +121,16 @@ const authorize = (...roles: UserRole[]) => {
       return res.status(401).json(response);
     }
 
-    if (!roles.includes(req.user.role)) {
+    console.log('🔍 Checking role inclusion:', {
+      userRole: req.user.role,
+      userRoleType: typeof req.user.role,
+      rolesArray: roles,
+      rolesType: roles.map(r => typeof r),
+      includes: roles.includes(req.user.role as UserRole)
+    });
+
+    if (!roles.includes(req.user.role as UserRole)) {
+      console.log('❌ Authorization failed: Insufficient permissions');
       const response: ApiResponse = {
         success: false,
         error: 'Insufficient permissions'
@@ -122,6 +138,7 @@ const authorize = (...roles: UserRole[]) => {
       return res.status(403).json(response);
     }
 
+    console.log('✅ Authorization passed');
     next();
   };
 };
@@ -333,6 +350,50 @@ export function createServer() {
   app.post("/api/reviews", authenticateToken, handleCreateReview);
   
   // ===== ADMIN ONLY ROUTES =====
+  app.get("/api/admin/analytics", 
+    authenticateToken, 
+    authorize('ADMIN'), 
+    handleGetAnalytics
+  );
+  app.get("/api/admin/dashboard-stats", 
+    authenticateToken, 
+    authorize('ADMIN'), 
+    handleGetDashboardStats
+  );
+  app.get("/api/admin/users", 
+    authenticateToken, 
+    authorize('ADMIN'), 
+    handleGetUsers
+  );
+  app.get("/api/admin/salons", 
+    authenticateToken, 
+    authorize('ADMIN'), 
+    handleGetSalons
+  );
+  app.get("/api/admin/bookings",
+    authenticateToken,
+    authorize('ADMIN'),
+    (req, res, next) => {
+      console.log('🎯 BOOKINGS ROUTE HIT - Middleware passed');
+      next();
+    },
+    handleGetAllBookings
+  );
+  app.put("/api/admin/users/:userId/status", 
+    authenticateToken, 
+    authorize('ADMIN'), 
+    handleUpdateUserStatus
+  );
+  app.put("/api/admin/salons/:salonId/status", 
+    authenticateToken, 
+    authorize('ADMIN'), 
+    handleUpdateSalonStatus
+  );
+  app.put("/api/admin/bookings/:bookingId/status", 
+    authenticateToken, 
+    authorize('ADMIN'), 
+    handleUpdateBookingStatus
+  );
   app.get("/api/contact/submissions", 
     authenticateToken, 
     authorize('ADMIN'), 
